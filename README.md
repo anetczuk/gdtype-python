@@ -2,6 +2,8 @@
 
 Serialize and unserialize Godot types to it's binary format compatible with Godot's Binary serialization API.
 
+Code compatible *Godot 4.0 beta*.
+
 
 ## References
 
