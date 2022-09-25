@@ -27,4 +27,4 @@ if [ $exit_code -ne 0 ]; then
     exit $exit_code
 fi
 
-echo "docstyle -- no warnings found"
+echo "pydocstyle -- no warnings found"

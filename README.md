@@ -1,6 +1,6 @@
 # Godot binary serialization API to Python
 
-Serialize and unserialize Godot types to it's binary format compatible with Godot's Binary serialization API.
+Serialize and deserialize Godot types between GDScript and Python using binary format compatible with Godot's Binary serialization API.
 
 Code compatible *Godot 4.0 beta*.
 
