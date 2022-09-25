@@ -46,7 +46,7 @@ class DeserializeTest(unittest.TestCase):
     def test_bool_true(self):
         raw_bytes = b'\x08\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00'
         data = deserialize( raw_bytes )
-        
+
         data_type  = data[0]
         data_value = data[1]
         self.assertEqual( data_type, GodotType.BOOL )
@@ -56,7 +56,7 @@ class DeserializeTest(unittest.TestCase):
     def test_int(self):
         raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00'
         data = deserialize( raw_bytes )
-        
+
         data_type  = data[0]
         data_value = data[1]
         self.assertEqual( data_type, GodotType.INT )
@@ -66,7 +66,7 @@ class DeserializeTest(unittest.TestCase):
     def test_float64(self):
         raw_bytes = b'\x0c\x00\x00\x00\x03\x00\x01\x00Zd;\xdfO\xd5^@'
         data = deserialize( raw_bytes )
-        
+
         data_type  = data[0]
         data_value = data[1]
         self.assertEqual( data_type, GodotType.FLOAT )
@@ -96,7 +96,7 @@ class DeserializeTest(unittest.TestCase):
     def test_list_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x1c\x00\x00\x00\x00\x00\x00\x00'
         data = deserialize( raw_bytes )
-        
+
         data_type  = data[0]
         data_value = data[1]
         self.assertEqual( data_type, GodotType.LIST )
@@ -104,9 +104,10 @@ class DeserializeTest(unittest.TestCase):
         self.assertEqual( data_value, [] )
 
     def test_list_int(self):
+        # pylint: disable=C0301
         raw_bytes = b' \x00\x00\x00\x1c\x00\x00\x00\x03\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00'
         data = deserialize( raw_bytes )
-        
+
         data_type  = data[0]
         data_value = data[1]
         self.assertEqual( data_type, GodotType.LIST )
@@ -116,7 +117,7 @@ class DeserializeTest(unittest.TestCase):
     def test_dict_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x1b\x00\x00\x00\x00\x00\x00\x00'
         data = deserialize( raw_bytes )
-        
+
         data_type  = data[0]
         data_value = data[1]
         self.assertEqual( data_type, GodotType.DICT )
@@ -124,9 +125,10 @@ class DeserializeTest(unittest.TestCase):
         self.assertEqual( data_value, {} )
 
     def test_dict_int_str(self):
-        raw_bytes =  b'\x1c\x00\x00\x00\x1b\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x05\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00bbc\x00'
+        # pylint: disable=C0301
+        raw_bytes = b'\x1c\x00\x00\x00\x1b\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x05\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00bbc\x00'
         data = deserialize( raw_bytes )
-        
+
         data_type  = data[0]
         data_value = data[1]
         self.assertEqual( data_type, GodotType.DICT )
@@ -137,7 +139,7 @@ class DeserializeTest(unittest.TestCase):
 #         ## two RGBA items
 #         raw_bytes = b'(\x00\x00\x00%\x00\x00\x00\x02\x00\x00\x00\xcd\xcc\xcc=\xcd\xccL>\x9a\x99\x99>\xcd\xcc\xcc>\xcd\xcc\xcc>\x00\x00\x00?\x9a\x99\x19?333?'
 #         data = deserialize( raw_bytes )
-#         
+#
 #         data_type  = data[0]
 #         data_value = data[1]
 #         self.assertEqual( data_type, GodotType.PackedColorArray )
