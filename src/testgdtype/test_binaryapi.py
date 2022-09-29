@@ -23,15 +23,7 @@
 
 import unittest
 
-from gdtype.binaryapi import deserialize, GodotType
-
-
-# b'\x0c\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00aaa2' 16
-# b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00' 12
-
-# b'\x0c\x00\x00\x00\x03\x00\x01\x00Zd;\xdfO\xd5^@' 16
-# b'\x08\x00\x00\x00\x1c\x00\x00\x00\x00\x00\x00\x00' 12
-# b'\x08\x00\x00\x00\x1b\x00\x00\x00\x00\x00\x00\x00' 12
+from gdtype.binaryapi import deserialize, GodotType, serialize
 
 
 class DeserializeTest(unittest.TestCase):
@@ -42,6 +34,15 @@ class DeserializeTest(unittest.TestCase):
     def tearDown(self):
         ## Called after testfunction was executed
         pass
+
+    def test_none(self):
+        raw_bytes = b'\x04\x00\x00\x00\x00\x00\x00\x00'
+        data = deserialize( raw_bytes )
+
+        data_type  = data[0]
+        data_value = data[1]
+        self.assertEqual( data_type, GodotType.NULL )
+        self.assertEqual( data_value, None )
 
     def test_bool_true(self):
         raw_bytes = b'\x08\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00'
@@ -147,3 +148,69 @@ class DeserializeTest(unittest.TestCase):
 #         data_dict = { "type": "PackedColorArray"
 #                     }
 #         self.assertEqual( data_value, data_dict )
+
+
+class SerializeTest(unittest.TestCase):
+    def setUp(self):
+        ## Called before testfunction is executed
+        pass
+
+    def tearDown(self):
+        ## Called after testfunction was executed
+        pass
+
+    def test_bool_true(self):
+        raw_bytes = b'\x08\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00'
+        data_value = True
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_int(self):
+        raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00'
+        data_value = 123
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_float64(self):
+        raw_bytes = b'\x0c\x00\x00\x00\x03\x00\x01\x00Zd;\xdfO\xd5^@'
+        data_value = 123.333
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_string_nonempty(self):
+        raw_bytes = b'\x0c\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00aaa2'
+        data_value = "aaa2"
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_string_empty(self):
+        raw_bytes = b'\x08\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00'
+        data_value = ""
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_list_empty(self):
+        raw_bytes = b'\x08\x00\x00\x00\x1c\x00\x00\x00\x00\x00\x00\x00'
+        data_value = []
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_list_int(self):
+        # pylint: disable=C0301
+        raw_bytes = b' \x00\x00\x00\x1c\x00\x00\x00\x03\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00'
+        data_value = [1, 2, 3]
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+        
+    def test_dict_empty(self):
+        raw_bytes = b'\x08\x00\x00\x00\x1b\x00\x00\x00\x00\x00\x00\x00'
+        data_value = {}
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_dict_int_str(self):
+        # pylint: disable=C0301
+        raw_bytes = b'\x1c\x00\x00\x00\x1b\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x05\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00bbc\x00'
+        data_value = {5: "bbc"}
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
