@@ -288,6 +288,13 @@ class Deserializer:
         ## unhandled case
         _LOGGER.error( "unhandled data type %s %s", data_type, data_type_id )
         return ( data_type_id, None )
+    
+    @classmethod
+    def get_message_length(cls, data: bytes):
+        container = BytesContainer( data )
+        if container.size() < 4:
+            return None
+        return container.popInt()
 
 
 ## ===========================================================
