@@ -26,6 +26,11 @@ import unittest
 from gdtype.binaryapi import deserialize, GodotType, serialize
 
 
+#TODO: add tests for invalid input (check exceptions)
+#TODO: add test for CONFIG_LIST: serialize and deserialize and compare results
+#TODO: add tests inside GDScript (call python code from gdsript)
+
+
 class DeserializeTest(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
@@ -37,102 +42,63 @@ class DeserializeTest(unittest.TestCase):
 
     def test_none(self):
         raw_bytes = b'\x04\x00\x00\x00\x00\x00\x00\x00'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.NULL )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( data_value, None )
 
     def test_bool_true(self):
         raw_bytes = b'\x08\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.BOOL )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), bool )
         self.assertEqual( data_value, True )
 
     def test_int(self):
         raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.INT )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), int )
         self.assertEqual( data_value, 123 )
 
     def test_float64(self):
         raw_bytes = b'\x0c\x00\x00\x00\x03\x00\x01\x00Zd;\xdfO\xd5^@'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.FLOAT )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), float )
         self.assertEqual( data_value, 123.333 )
 
     def test_string_nonempty(self):
         raw_bytes = b'\x0c\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00aaa2'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.STRING )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), str )
         self.assertEqual( data_value, "aaa2" )
 
     def test_string_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.STRING )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), str )
         self.assertEqual( data_value, "" )
 
     def test_list_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x1c\x00\x00\x00\x00\x00\x00\x00'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.LIST )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), list )
         self.assertEqual( data_value, [] )
 
     def test_list_int(self):
         # pylint: disable=C0301
         raw_bytes = b'\x20\x00\x00\x00\x1c\x00\x00\x00\x03\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.LIST )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), list )
         self.assertEqual( data_value, [1, 2, 3] )
 
     def test_dict_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x1b\x00\x00\x00\x00\x00\x00\x00'
-        data = deserialize( raw_bytes )
-
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.DICT )
+        data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), dict )
         self.assertEqual( data_value, {} )
 
     def test_dict_int_str(self):
         # pylint: disable=C0301
         raw_bytes = b'\x1c\x00\x00\x00\x1b\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x05\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00bbc\x00'
-        data = deserialize( raw_bytes )
+        data_value = deserialize( raw_bytes )
 
-        data_type  = data[0]
-        data_value = data[1]
-        self.assertEqual( data_type, GodotType.DICT )
         self.assertEqual( type(data_value), dict )
         self.assertEqual( data_value, {5: "bbc"} )
 

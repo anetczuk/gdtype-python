@@ -30,36 +30,21 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def deserialize( data: bytes ):
-    deserializer = Deserializer( data )
-    return deserializer.deserialize()
+    return deserialize_data( data )
 
 
 def serialize( data ) -> bytes:
-    serializer = Serializer()
-    return serializer.serialize( data )
+    return serialize_data( data )
 
 
-## ===========================================================
+def get_message_length( data: bytes ):
+    container = BytesContainer( data )
+    if container.size() < 4:
+        return None
+    return container.popInt()
 
 
-@unique
-class GodotType( IntEnum ):
-    UNKNOWN             = -1
-    NULL                = 0
-    BOOL                = 1
-    INT                 = 2
-    FLOAT               = 3
-    STRING              = 4
-    DICT                = 27
-    LIST                = 28
-#     PackedColorArray    = 37
-
-    @classmethod
-    def fromInt(cls, value):
-        try:
-            return GodotType( value )
-        except ValueError:
-            return GodotType.UNKNOWN
+## ======================================================================
 
 
 ## mutable wrapper for bytes
@@ -150,236 +135,278 @@ class BytesContainer:
         return str( self.data )
 
 
-##
-class Deserializer:
+## ======================================================================
 
-    def __init__(self, data: bytes = None):
-        self.data = BytesContainer( data )
 
-    def deserialize(self):
-        data_len = self.data.size()
-        if data_len < 4:
-            _LOGGER.error( "invalid packet -- too short: %s", self.data )
-            return ( None, None )
+@unique
+class GodotType( IntEnum ):
+    NULL                = 0
+    BOOL                = 1
+    INT                 = 2
+    FLOAT               = 3
+    STRING              = 4
+    DICT                = 27
+    LIST                = 28
+#     PackedColorArray    = 37
 
-        packet_size = self.data.popInt()
-        data_size = self.data.size()
-        if data_size != packet_size:
-            _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", self.data )
-            return ( None, None )
+    @classmethod
+    def fromInt(cls, value):
+        return GodotType( value )
 
-        result = self._popType()
-        return ( result[0], result[1] )
 
-    def _popType( self ):
-        data_len = self.data.size()
-        if data_len < 4:
-            _LOGGER.error( "invalid packet -- too short: %s", self.data )
-            return ( None, None )
+## ======================================================================
 
-        data_flags, data_type = self.data.popFlagsType()
 
-        data_type_id = GodotType.fromInt( data_type )
+def deserialize_data( message: bytes ):
+    data = BytesContainer( message )
+    data_len = data.size()
+    if data_len < 4:
+        _LOGGER.error( "invalid packet -- too short: %s", data )
+        return None
 
-        if data_type_id == GodotType.UNKNOWN:
-            _LOGGER.error( "unknown data type %s", data_type )
-            return ( data_type_id, None )
+    packet_size = data.popInt()
+    data_size   = data.size()
+    if data_size != packet_size:
+        _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", data )
+        return None
 
-        if data_type_id == GodotType.NULL:
-            return ( data_type_id, None )
+    return deserialize_type( data )
 
-        if data_type_id == GodotType.BOOL:
-            data_len = self.data.size()
-            if data_len < 4:
-                _LOGGER.error( "invalid packet -- too short: %s", self.data )
-                return ( None, None )
-            data_value = self.data.popInt()
-            proper_data = data_value > 0
-            return ( data_type_id, proper_data )
+def deserialize_none( data_flags: int, data: BytesContainer ):
+    return None
 
-        if data_type_id == GodotType.INT:
-            data_len = self.data.size()
-            if data_len < 4:
-                _LOGGER.error( "invalid packet -- too short: %s", self.data )
-                return ( None, None )
-            proper_data = self.data.popInt()
-            return ( data_type_id, proper_data )
+def deserialize_bool( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        _LOGGER.error( "invalid packet -- too short: %s", data )
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    data_value = data.popInt()
+    proper_data = data_value > 0
+    return proper_data
 
-        if data_type_id == GodotType.FLOAT:
-            data_len = self.data.size()
-            encoded_64 = (data_flags & 1) == 1
-            if encoded_64:
-                if data_len < 8:
-                    _LOGGER.error( "invalid packet -- too short: %s", self.data )
-                    return ( None, None )
-    #             _LOGGER.info( "remaining float data: %s", data[4:12] )
-                proper_data = self.data.popFloat64()
-                return ( data_type_id, proper_data )
-            ## 32 bit variant
-            if data_len < 4:
-                _LOGGER.error( "invalid packet -- too short: %s", self.data )
-                return ( None, None )
-#             _LOGGER.info( "remaining float data: %s", data[4:8] )
-            proper_data = self.data.popFloat32()
-            return ( data_type_id, proper_data )
+def deserialize_int( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    proper_data = data.popInt()
+    return proper_data
 
-        if data_type_id == GodotType.STRING:
-            data_len = self.data.size()
-            if data_len < 4:
-                _LOGGER.error( "invalid packet -- too short: %s", self.data )
-                return ( None, None )
-            string_len = self.data.popInt()
-            if string_len < 1:
-                return ( data_type_id, "" )
-            proper_data = self.data.popString( string_len )
-            return ( data_type_id, proper_data )
+def deserialize_float( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    encoded_64 = (data_flags & 1) == 1
+    if encoded_64:
+        if data_len < 8:
+            raise ValueError( "invalid packet -- too short: %s" % data )
+        proper_data = data.popFloat64()
+        return proper_data
+    ## 32 bit variant
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    proper_data = data.popFloat32()
+    return proper_data
 
-        if data_type_id == GodotType.DICT:
-            data_len = self.data.size()
-            if data_len < 4:
-                _LOGGER.error( "invalid packet -- too short: %s", self.data )
-                return ( None, None )
-            data_header = self.data.popInt()
-            list_size   = data_header & 0x7FFFFFFF
-    #         shared_flag = data_header & 0x80000000
-            if list_size < 1:
-                return ( data_type_id, {} )
+def deserialize_string( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    string_len = data.popInt()
+    if string_len < 1:
+        return ""
+    proper_data = data.popString( string_len )
+    return proper_data
 
-            proper_data = {}
-            for _ in range(0, list_size):
-                key_result = self._popType()
-                key_result_type = key_result[0]
-                if key_result_type is GodotType.UNKNOWN:
-                    _LOGGER.error( "invalid dict key" )
-                    return ( None, None )
-                key_result_value = key_result[1]
+def deserialize_dict( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    data_header = data.popInt()
+    list_size   = data_header & 0x7FFFFFFF
+#         shared_flag = data_header & 0x80000000
+    if list_size < 1:
+        return {}
 
-                item_result = self._popType()
-                item_result_type = item_result[0]
-                if item_result_type is GodotType.UNKNOWN:
-                    _LOGGER.error( "invalid dict value" )
-                    return ( None, None )
-                item_result_value = item_result[1]
+    proper_data = {}
+    for _ in range(0, list_size):
+        key_value  = deserialize_type( data )
+        item_value = deserialize_type( data )
+        proper_data[ key_value ] = item_value
+    return proper_data
 
-                proper_data[ key_result_value ] = item_result_value
-            return ( data_type_id, proper_data )
+def deserialize_list( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    data_header = data.popInt()
+    list_size   = data_header & 0x7FFFFFFF
+#         shared_flag = data_header & 0x80000000
+    if list_size < 1:
+        return []
 
-        if data_type_id == GodotType.LIST:
-            data_len = self.data.size()
-            if data_len < 4:
-                _LOGGER.error( "invalid packet -- too short: %s", self.data )
-                return ( None, None )
-            data_header = self.data.popInt()
-            list_size   = data_header & 0x7FFFFFFF
-    #         shared_flag = data_header & 0x80000000
-            if list_size < 1:
-                return ( data_type_id, [] )
+    proper_data = []
+    for _ in range(0, list_size):
+        item_value = deserialize_type( data )
+        proper_data.append( item_value )
+    return proper_data
 
-            proper_data = []
-            for _ in range(0, list_size):
-                result = self._popType()
-                result_type = result[0]
-                if result_type is GodotType.UNKNOWN:
-                    _LOGGER.error( "invalid list item" )
-                    return ( None, None )
-                proper_data.append( result[1] )
-            return ( data_type_id, proper_data )
 
-        ## unhandled case
+## ======================================================================
+
+
+def serialize_data( value ) -> bytes:
+    data = BytesContainer()
+    serialize_type( value, data )
+    if data.size() < 1:
+        ## failed to serialize data -- send NULL data
+        data.pushFlagsType( 0, GodotType.NULL )
+    message = BytesContainer()
+    header_size = data.size()
+    message.pushInt( header_size )
+    message.push( data.data )
+    return message.data  
+    
+def serialize_none( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+
+def serialize_bool( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    data.pushInt( value )
+
+def serialize_int( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    data.pushInt( value )
+
+def serialize_float( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 1, data_type_id )
+    data.pushFloat64( value )
+
+def serialize_string( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    str_len = len( value )
+    data.pushInt( str_len )
+    data.pushString( value )
+    remaining = str_len % 4
+    padding = 4 - remaining
+    if padding < 4:
+        data.pushZeros( padding )
+
+def serialize_dict( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    dict_size = len( value )
+#             shared_flag = 0 & 0x80000000
+#             data_header = shared_flag & list_size & 0x7FFFFFFF
+    data_header = dict_size & 0x7FFFFFFF
+    data.pushInt( data_header )
+    for key in value:
+        serialize_type( key, data )
+        sub_value = value[ key ]
+        serialize_type( sub_value, data )
+    
+def serialize_list( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    list_size = len( value )
+#             shared_flag = 0 & 0x80000000
+#             data_header = shared_flag & list_size & 0x7FFFFFFF
+    data_header = list_size & 0x7FFFFFFF
+    data.pushInt( data_header )
+    for i in range(0, list_size):
+        sub_value = value[ i ]
+        serialize_type( sub_value, data )
+
+
+## ======================================================================
+
+
+"""
+types configuration for serialization and deserialization
+<deserialize_function> converts given Godot type in form of binary array into Python equivalent
+<serialize_function>   converts Python value into binary array representing Godot type
+"""
+CONFIG_LIST = [
+    ( GodotType.NULL,   type(None), deserialize_none,   serialize_none ),
+    ( GodotType.BOOL,   bool,       deserialize_bool,   serialize_bool ),
+    ( GodotType.INT,    int,        deserialize_int,    serialize_int ),
+    ( GodotType.FLOAT,  float,      deserialize_float,  serialize_float ),
+    ( GodotType.STRING, str,        deserialize_string, serialize_string ),
+    ( GodotType.DICT,   dict,       deserialize_dict,   serialize_dict ),
+    ( GodotType.LIST,   list,       deserialize_list,   serialize_list )
+]
+
+
+## ======================================================================
+
+
+## calculate proper maps and validate configuration
+DESERIALIZATION_MAP = {}        ## map GodotType to deserialization function
+SERIALIZATION_MAP   = {}
+
+for config in CONFIG_LIST:
+    ## deserialization map
+    config_gd_type = config[0]
+    if config_gd_type in DESERIALIZATION_MAP:
+        raise ValueError( "invalid CONFIG_LIST: Godot type %s already defined" % config_gd_type )
+    DESERIALIZATION_MAP[ config_gd_type ] = config[2]
+    
+    ## serialization map
+    config_py_type = config[1]
+    if config_py_type in SERIALIZATION_MAP:
+        raise ValueError( "invalid CONFIG_LIST: Python type %s already defined" % config_py_type )
+    SERIALIZATION_MAP[ config_py_type ] = ( config_gd_type, config[3] )
+
+
+## ======================================================================
+
+
+## returns Python equivalent of given data
+def deserialize_type( data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+
+    data_flags, data_type = data.popFlagsType()
+    data_type_id          = GodotType.fromInt( data_type )
+    
+    deserialize_function = DESERIALIZATION_MAP.get( data_type_id, None )
+    if deserialize_function is None:
+        ##raise ValueError( "invalid CONFIG_LIST: missing entry for GodotType %s" % data_type_id )
         _LOGGER.error( "unhandled data type %s %s", data_type, data_type_id )
         return ( data_type_id, None )
+
+    return deserialize_function( data_flags, data )
     
-    @classmethod
-    def get_message_length(cls, data: bytes):
-        container = BytesContainer( data )
-        if container.size() < 4:
-            return None
-        return container.popInt()
+#     for config in CONFIG_LIST:
+#         config_gd_type = config[0]
+#         if data_type_id is config_gd_type:
+#             deserialize_function = config[2]
+#             proper_data = deserialize_function( data_flags, data )
+#             return ( data_type_id, proper_data )
+# 
+#     ## unhandled case
+#     _LOGGER.error( "unhandled data type %s %s", data_type, data_type_id )
+#     return ( data_type_id, None )
 
 
-## ===========================================================
+## serialize into 'data' given Python 'value' as binary representation of Godot equivalent
+def serialize_type( value, data: BytesContainer ):
+    value_type = type( value )
+    
+    serialize_config = SERIALIZATION_MAP.get( value_type, None )
+    if serialize_config is None:
+        #_LOGGER.warning( "unable to serialize data: %s %s", value, type(value) )
+        raise ValueError( "unable to serialize data: %s %s" % ( value, type(value) ) )
+    
+    data_type_id       = serialize_config[0]
+    serialize_function = serialize_config[1]
 
-
-##
-class Serializer:
-
-    def __init__(self):
-        self.data = None
-
-    def serialize(self, value = None) -> bytes:
-        self.data = BytesContainer()
-        self._pushType( value )
-        if self.data.size() < 1:
-            ## failed to serialize data -- send NULL data
-            self.data.pushFlagsType( 0, GodotType.NULL )
-        header = BytesContainer()
-        header_size = self.data.size()
-        header.pushInt( header_size )
-        header.push( self.data.data )
-        self.data = header
-        return self.data.data
-
-    def _pushType(self, value = None ):
-        if value is None:
-            data_type_id = GodotType.NULL
-            self.data.pushFlagsType( 0, data_type_id )
-            return
-
-        if isinstance(value, bool):
-            data_type_id = GodotType.BOOL
-            self.data.pushFlagsType( 0, data_type_id )
-            self.data.pushInt( value )
-            return
-
-        if isinstance(value, int):
-            data_type_id = GodotType.INT
-            self.data.pushFlagsType( 0, data_type_id )
-            self.data.pushInt( value )
-            return
-
-        if isinstance(value, float):
-            data_type_id = GodotType.FLOAT
-            self.data.pushFlagsType( 1, data_type_id )
-            self.data.pushFloat64( value )
-            return
-
-        if isinstance(value, str):
-            data_type_id = GodotType.STRING
-            self.data.pushFlagsType( 0, data_type_id )
-            str_len = len( value )
-            self.data.pushInt( str_len )
-            self.data.pushString( value )
-            remaining = str_len % 4
-            padding = 4 - remaining
-            if padding < 4:
-                self.data.pushZeros( padding )
-            return
-
-        if isinstance(value, dict):
-            data_type_id = GodotType.DICT
-            self.data.pushFlagsType( 0, data_type_id )
-            dict_size = len( value )
-#             shared_flag = 0 & 0x80000000
-#             data_header = shared_flag & list_size & 0x7FFFFFFF
-            data_header = dict_size & 0x7FFFFFFF
-            self.data.pushInt( data_header )
-            for key in value:
-                self._pushType( key )
-                sub_value = value[ key ]
-                self._pushType( sub_value )
-            return
-
-        if isinstance(value, list):
-            data_type_id = GodotType.LIST
-            self.data.pushFlagsType( 0, data_type_id )
-            list_size = len( value )
-#             shared_flag = 0 & 0x80000000
-#             data_header = shared_flag & list_size & 0x7FFFFFFF
-            data_header = list_size & 0x7FFFFFFF
-            self.data.pushInt( data_header )
-            for i in range(0, list_size):
-                sub_value = value[ i ]
-                self._pushType( sub_value )
-            return
-
-        _LOGGER.warning( "unable to serialize data: %s %s", value, type(value) )
+    serialize_function( data_type_id, value, data )
+    
+#     for config in CONFIG_LIST:
+#         config_py_type = config[1]
+#         ## if isinstance(value, config_py_type):
+#         if value_type is config_py_type:
+#             serialize_function = config[3]
+#             data_type_id       = config[0]
+#             serialize_function( data_type_id, value, data )
+#             return
+# 
+#     raise ValueError( "unable to serialize data: %s %s" % ( value, type(value) ) )
+#     #_LOGGER.warning( "unable to serialize data: %s %s", value, type(value) )
