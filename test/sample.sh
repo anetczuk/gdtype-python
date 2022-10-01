@@ -6,7 +6,8 @@ set -eu
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SCRIPT_NAME=`basename "$0"`
 
-CONFIG_PATH="$SCRIPT_DIR/$SCRIPT_NAME.cfg"
+CONFIG_PATH="$SCRIPT_DIR/config.cfg"
+##CONFIG_PATH="$SCRIPT_DIR/$SCRIPT_NAME.cfg"
 
 if [ ! -f $CONFIG_PATH ]; then
 cat > $CONFIG_PATH <<- EOM
@@ -40,6 +41,6 @@ if [ -z "$ENGINE_PATH" ] || [ ! -f $ENGINE_PATH ]; then
 fi
 
 
-SCRIPT_PATH="$SCRIPT_DIR/gen_data.gd"
+SCRIPT_PATH="$SCRIPT_DIR/sample.gd"
 
 $ENGINE_PATH --headless --script $SCRIPT_PATH
