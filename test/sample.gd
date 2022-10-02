@@ -2,11 +2,9 @@
 ##
 
 extends MainLoop
-
 func _initialize():
     execute()
-
-func _process(delta):
+func _process( delta ):
     return true
 
 ## =========================================================================
