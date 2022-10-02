@@ -40,6 +40,7 @@ def serialize( data ) -> bytes:
 def get_message_length( data: bytes ):
     container = BytesContainer( data )
     if container.size() < 4:
+        _LOGGER.error( "message is too short: %s", data )
         return None
     return container.popInt()
 
@@ -162,13 +163,13 @@ def deserialize_data( message: bytes ):
     data_len = data.size()
     if data_len < 4:
         _LOGGER.error( "invalid packet -- too short: %s", data )
-        return None
+        raise ValueError( "invalid packet -- too short: %s" % data )
 
     packet_size = data.popInt()
     data_size   = data.size()
     if data_size != packet_size:
         _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", data )
-        return None
+        raise ValueError( "packet isze mismatch: %s" % data )
 
     return deserialize_type( data )
 
@@ -367,9 +368,8 @@ def deserialize_type( data: BytesContainer ):
     
     deserialize_function = DESERIALIZATION_MAP.get( data_type_id, None )
     if deserialize_function is None:
-        ##raise ValueError( "invalid CONFIG_LIST: missing entry for GodotType %s" % data_type_id )
         _LOGGER.error( "unhandled data type %s %s", data_type, data_type_id )
-        return ( data_type_id, None )
+        raise ValueError( "invalid CONFIG_LIST: missing entry for GodotType %s" % data_type_id )
 
     return deserialize_function( data_flags, data )
     
