@@ -23,7 +23,7 @@
 
 import unittest
 
-from gdtype.binaryapi import deserialize, GodotType, serialize
+from gdtype.binaryapi import deserialize, serialize
 
 
 #TODO: add tests for invalid input (check exceptions)
@@ -56,6 +56,18 @@ class DeserializeTest(unittest.TestCase):
         data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), int )
         self.assertEqual( data_value, 123 )
+
+    def test_int_negative_1(self):
+        raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00\xff\xff\xff\xff'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), int )
+        self.assertEqual( data_value, -1 )
+
+    def test_int_negative_max(self):
+        raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x80'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), int )
+        self.assertEqual( data_value, -2147483648 )
 
     def test_float64(self):
         raw_bytes = b'\x0c\x00\x00\x00\x03\x00\x01\x00Zd;\xdfO\xd5^@'

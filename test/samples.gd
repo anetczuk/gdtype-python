@@ -50,6 +50,15 @@ func execute():
     data = 123
     print( "int ", data, "\n", serialized_representation( data ) )
 
+    data = -1
+    print( "-int ", data, "\n", serialized_representation( data ) )
+
+    data = -2147483648
+    print( "-int ", data, "\n", serialized_representation( data ) )
+
+    #data = -123
+    #print( "-int ", data, "\n", serialized_representation( data ) )
+
     data = 123.333
     print( "float ", data, "\n", serialized_representation( data ) )
 

@@ -190,7 +190,14 @@ def deserialize_int( data_flags: int, data: BytesContainer ):
     if data_len < 4:
         raise ValueError( "invalid packet -- too short: %s" % data )
     proper_data = data.popInt()
-    return proper_data
+    if proper_data & 0x80000000:
+        ## got negative number
+        neg_val = proper_data & 0x7FFFFFFF
+        return -0x80000000 + neg_val
+#         return proper_data & 0x7FFFFFFF | ~0x7FFFFFFF
+    else:
+        ## positive number
+        return proper_data
 
 def deserialize_float( data_flags: int, data: BytesContainer ):
     data_len = data.size()
@@ -274,7 +281,14 @@ def serialize_bool( data_type_id, value, data: BytesContainer ):
 
 def serialize_int( data_type_id, value, data: BytesContainer ):
     data.pushFlagsType( 0, data_type_id )
-    data.pushInt( value )
+    if value & 0x80000000:
+        ## got negative number
+        pos_val = value & 0x7FFFFFFF
+        out = 0x80000000 + pos_val
+        data.pushInt( out )
+    else:
+        ## positive number
+        data.pushInt( value )
 
 def serialize_float( data_type_id, value, data: BytesContainer ):
     data.pushFlagsType( 1, data_type_id )
