@@ -116,6 +116,7 @@ class DeserializeTest(unittest.TestCase):
 
 #     def test_PackedColorArray(self):
 #         ## two RGBA items
+#         # pylint: disable=C0301
 #         raw_bytes = b'(\x00\x00\x00%\x00\x00\x00\x02\x00\x00\x00\xcd\xcc\xcc=\xcd\xccL>\x9a\x99\x99>\xcd\xcc\xcc>\xcd\xcc\xcc>\x00\x00\x00?\x9a\x99\x19?333?'
 #         data = deserialize( raw_bytes )
 #
@@ -179,7 +180,7 @@ class SerializeTest(unittest.TestCase):
         data_value = [1, 2, 3]
         data = serialize( data_value )
         self.assertEqual( data, raw_bytes )
-        
+
     def test_dict_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x1b\x00\x00\x00\x00\x00\x00\x00'
         data_value = {}

@@ -38,7 +38,7 @@ class BytesContainer:
 
     def size(self):
         return len( self.data )
-    
+
     ## =====================================================
 
     ## pop front
@@ -51,19 +51,19 @@ class BytesContainer:
     def popInt(self):
         raw = self.pop(4)
         return int.from_bytes( raw, byteorder='little' )
-    
+
     def popFloat32(self):
         raw = self.pop(4)
         proper_data = struct.unpack( "<f", raw )
         proper_data = proper_data[0]
         return proper_data
-    
+
     def popFloat64(self):
         raw = self.pop(8)
         proper_data = struct.unpack( "<d", raw )
         proper_data = proper_data[0]
         return proper_data
-    
+
     def popString(self, string_len: int):
         data_string = self.pop( string_len )
         return data_string.decode("utf-8")
@@ -96,11 +96,11 @@ class BytesContainer:
     def pushFloat32(self, value: float):
         raw = struct.pack( "<f", value )
         self.push( raw )
-    
+
     def pushFloat64(self, value: float):
         raw = struct.pack( "<d", value )
         self.push( raw )
-    
+
     def pushString(self, value: str):
         raw = value.encode("utf-8")
         self.push( raw )
