@@ -146,13 +146,17 @@ class GodotType( IntEnum ):
     INT                 = 2
     FLOAT               = 3
     STRING              = 4
+    COLOR               = 20
     DICT                = 27
     LIST                = 28
 #     PackedColorArray    = 37
 
     @classmethod
     def fromInt(cls, value):
-        return GodotType( value )
+        try:
+            return GodotType( value )
+        except ValueError:
+            raise ValueError( "unsupported Godot type: %s" % value )
 
 
 ## ======================================================================
@@ -223,6 +227,14 @@ def deserialize_string( data_flags: int, data: BytesContainer ):
     proper_data = data.popString( string_len )
     return proper_data
 
+def deserialize_color( data_flags: int, data: BytesContainer ):
+    ## RGBA
+    red   = data.popFloat32()
+    green = data.popFloat32()
+    blue  = data.popFloat32()
+    alpha = data.popFloat32()
+    return ( red, green, blue, alpha )
+
 def deserialize_dict( data_flags: int, data: BytesContainer ):
     data_len = data.size()
     if data_len < 4:
@@ -255,6 +267,9 @@ def deserialize_list( data_flags: int, data: BytesContainer ):
         item_value = deserialize_type( data )
         proper_data.append( item_value )
     return proper_data
+
+def deserialize_uninplemented( data_flags: int, data: BytesContainer ):
+    raise NotImplementedError( "stub deserialization used: implement/use proper function" )
 
 
 ## ======================================================================
@@ -304,6 +319,16 @@ def serialize_string( data_type_id, value, data: BytesContainer ):
     if padding < 4:
         data.pushZeros( padding )
 
+def serialize_color( data_type_id, value, data: BytesContainer ):
+    if len( value ) != 4:
+        raise ValueError( "invalid input value, 4 elements tuple expected: %s" % data )
+    data.pushFlagsType( 0, data_type_id )
+    ## RGBA
+    data.pushFloat32( value[0] )
+    data.pushFloat32( value[1] )
+    data.pushFloat32( value[2] )
+    data.pushFloat32( value[3] )
+
 def serialize_dict( data_type_id, value, data: BytesContainer ):
     data.pushFlagsType( 0, data_type_id )
     dict_size = len( value )
@@ -327,6 +352,9 @@ def serialize_list( data_type_id, value, data: BytesContainer ):
         sub_value = value[ i ]
         serialize_type( sub_value, data )
 
+def serialize_uninplemented( data_type_id, value, data: BytesContainer ):
+    raise NotImplementedError( "stub serialization used: implement/use proper function" )
+
 
 ## ======================================================================
 
@@ -342,8 +370,11 @@ CONFIG_LIST = [
     ( GodotType.INT,    int,        deserialize_int,    serialize_int ),
     ( GodotType.FLOAT,  float,      deserialize_float,  serialize_float ),
     ( GodotType.STRING, str,        deserialize_string, serialize_string ),
+    ( GodotType.COLOR,  tuple,      deserialize_color,  serialize_color ),
     ( GodotType.DICT,   dict,       deserialize_dict,   serialize_dict ),
     ( GodotType.LIST,   list,       deserialize_list,   serialize_list )
+
+#     ( GodotType.BOOL,  bool,        deserialize_uninplemented,  serialize_uninplemented ),
 ]
 
 

@@ -44,16 +44,20 @@ if __name__ == '__main__':
     else:
         logging.getLogger().setLevel( logging.ERROR )
 
-    
-    ## loading data
-    input_object = None
-    with open( args.input_file, mode='rb' ) as file:
-        fileContent = file.read()
-        input_object = deserialize( fileContent )
-    
-    print( "got object: ", input_object )
 
-    ## st0ring data
-    with open( args.output_file, mode='wb' ) as file:
-        output_data = serialize( input_object )
-        file.write( output_data )
+    try:
+        ## loading data
+        input_object = None
+        with open( args.input_file, mode='rb' ) as file:
+            fileContent = file.read()
+            input_object = deserialize( fileContent )
+        
+        print( "got object: ", input_object )
+    
+        ## st0ring data
+        with open( args.output_file, mode='wb' ) as file:
+            output_data = serialize( input_object )
+            file.write( output_data )
+    except:
+        print( "error occur during data handling:", fileContent )
+        raise
