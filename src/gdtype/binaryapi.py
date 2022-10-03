@@ -177,103 +177,6 @@ def deserialize_data( message: bytes ):
 
     return deserialize_type( data )
 
-def deserialize_none( data_flags: int, data: BytesContainer ):
-    return None
-
-def deserialize_bool( data_flags: int, data: BytesContainer ):
-    data_len = data.size()
-    if data_len < 4:
-        _LOGGER.error( "invalid packet -- too short: %s", data )
-        raise ValueError( "invalid packet -- too short: %s" % data )
-    data_value = data.popInt()
-    proper_data = data_value > 0
-    return proper_data
-
-def deserialize_int( data_flags: int, data: BytesContainer ):
-    data_len = data.size()
-    if data_len < 4:
-        raise ValueError( "invalid packet -- too short: %s" % data )
-    proper_data = data.popInt()
-    if proper_data & 0x80000000:
-        ## got negative number
-        neg_val = proper_data & 0x7FFFFFFF
-        return -0x80000000 + neg_val
-#         return proper_data & 0x7FFFFFFF | ~0x7FFFFFFF
-    else:
-        ## positive number
-        return proper_data
-
-def deserialize_float( data_flags: int, data: BytesContainer ):
-    data_len = data.size()
-    encoded_64 = (data_flags & 1) == 1
-    if encoded_64:
-        if data_len < 8:
-            raise ValueError( "invalid packet -- too short: %s" % data )
-        proper_data = data.popFloat64()
-        return proper_data
-    ## 32 bit variant
-    if data_len < 4:
-        raise ValueError( "invalid packet -- too short: %s" % data )
-    proper_data = data.popFloat32()
-    return proper_data
-
-def deserialize_string( data_flags: int, data: BytesContainer ):
-    data_len = data.size()
-    if data_len < 4:
-        raise ValueError( "invalid packet -- too short: %s" % data )
-    string_len = data.popInt()
-    if string_len < 1:
-        return ""
-    proper_data = data.popString( string_len )
-    return proper_data
-
-def deserialize_color( data_flags: int, data: BytesContainer ):
-    ## RGBA
-    red   = data.popFloat32()
-    green = data.popFloat32()
-    blue  = data.popFloat32()
-    alpha = data.popFloat32()
-    return ( red, green, blue, alpha )
-
-def deserialize_dict( data_flags: int, data: BytesContainer ):
-    data_len = data.size()
-    if data_len < 4:
-        raise ValueError( "invalid packet -- too short: %s" % data )
-    data_header = data.popInt()
-    list_size   = data_header & 0x7FFFFFFF
-#         shared_flag = data_header & 0x80000000
-    if list_size < 1:
-        return {}
-
-    proper_data = {}
-    for _ in range(0, list_size):
-        key_value  = deserialize_type( data )
-        item_value = deserialize_type( data )
-        proper_data[ key_value ] = item_value
-    return proper_data
-
-def deserialize_list( data_flags: int, data: BytesContainer ):
-    data_len = data.size()
-    if data_len < 4:
-        raise ValueError( "invalid packet -- too short: %s" % data )
-    data_header = data.popInt()
-    list_size   = data_header & 0x7FFFFFFF
-#         shared_flag = data_header & 0x80000000
-    if list_size < 1:
-        return []
-
-    proper_data = []
-    for _ in range(0, list_size):
-        item_value = deserialize_type( data )
-        proper_data.append( item_value )
-    return proper_data
-
-def deserialize_uninplemented( data_flags: int, data: BytesContainer ):
-    raise NotImplementedError( "stub deserialization used: implement/use proper function" )
-
-
-## ======================================================================
-
 
 def serialize_data( value ) -> bytes:
     data = BytesContainer()
@@ -286,117 +189,6 @@ def serialize_data( value ) -> bytes:
     message.pushInt( header_size )
     message.push( data.data )
     return message.data  
-    
-def serialize_none( data_type_id, value, data: BytesContainer ):
-    data.pushFlagsType( 0, data_type_id )
-
-def serialize_bool( data_type_id, value, data: BytesContainer ):
-    data.pushFlagsType( 0, data_type_id )
-    data.pushInt( value )
-
-def serialize_int( data_type_id, value, data: BytesContainer ):
-    data.pushFlagsType( 0, data_type_id )
-    if value & 0x80000000:
-        ## got negative number
-        pos_val = value & 0x7FFFFFFF
-        out = 0x80000000 + pos_val
-        data.pushInt( out )
-    else:
-        ## positive number
-        data.pushInt( value )
-
-def serialize_float( data_type_id, value, data: BytesContainer ):
-    data.pushFlagsType( 1, data_type_id )
-    data.pushFloat64( value )
-
-def serialize_string( data_type_id, value, data: BytesContainer ):
-    data.pushFlagsType( 0, data_type_id )
-    str_len = len( value )
-    data.pushInt( str_len )
-    data.pushString( value )
-    remaining = str_len % 4
-    padding = 4 - remaining
-    if padding < 4:
-        data.pushZeros( padding )
-
-def serialize_color( data_type_id, value, data: BytesContainer ):
-    if len( value ) != 4:
-        raise ValueError( "invalid input value, 4 elements tuple expected: %s" % data )
-    data.pushFlagsType( 0, data_type_id )
-    ## RGBA
-    data.pushFloat32( value[0] )
-    data.pushFloat32( value[1] )
-    data.pushFloat32( value[2] )
-    data.pushFloat32( value[3] )
-
-def serialize_dict( data_type_id, value, data: BytesContainer ):
-    data.pushFlagsType( 0, data_type_id )
-    dict_size = len( value )
-#             shared_flag = 0 & 0x80000000
-#             data_header = shared_flag & list_size & 0x7FFFFFFF
-    data_header = dict_size & 0x7FFFFFFF
-    data.pushInt( data_header )
-    for key in value:
-        serialize_type( key, data )
-        sub_value = value[ key ]
-        serialize_type( sub_value, data )
-    
-def serialize_list( data_type_id, value, data: BytesContainer ):
-    data.pushFlagsType( 0, data_type_id )
-    list_size = len( value )
-#             shared_flag = 0 & 0x80000000
-#             data_header = shared_flag & list_size & 0x7FFFFFFF
-    data_header = list_size & 0x7FFFFFFF
-    data.pushInt( data_header )
-    for i in range(0, list_size):
-        sub_value = value[ i ]
-        serialize_type( sub_value, data )
-
-def serialize_uninplemented( data_type_id, value, data: BytesContainer ):
-    raise NotImplementedError( "stub serialization used: implement/use proper function" )
-
-
-## ======================================================================
-
-
-"""
-types configuration for serialization and deserialization
-<deserialize_function> converts given Godot type in form of binary array into Python equivalent
-<serialize_function>   converts Python value into binary array representing Godot type
-"""
-CONFIG_LIST = [
-    ( GodotType.NULL,   type(None), deserialize_none,   serialize_none ),
-    ( GodotType.BOOL,   bool,       deserialize_bool,   serialize_bool ),
-    ( GodotType.INT,    int,        deserialize_int,    serialize_int ),
-    ( GodotType.FLOAT,  float,      deserialize_float,  serialize_float ),
-    ( GodotType.STRING, str,        deserialize_string, serialize_string ),
-    ( GodotType.COLOR,  tuple,      deserialize_color,  serialize_color ),
-    ( GodotType.DICT,   dict,       deserialize_dict,   serialize_dict ),
-    ( GodotType.LIST,   list,       deserialize_list,   serialize_list )
-
-#     ( GodotType.BOOL,  bool,        deserialize_uninplemented,  serialize_uninplemented ),
-]
-
-
-## ======================================================================
-
-
-## calculate proper maps and validate configuration
-DESERIALIZATION_MAP = {}        ## map GodotType to deserialization function
-SERIALIZATION_MAP   = {}
-
-for config in CONFIG_LIST:
-    ## deserialization map
-    config_gd_type = config[0]
-    if config_gd_type in DESERIALIZATION_MAP:
-        raise ValueError( "invalid CONFIG_LIST: Godot type %s already defined" % config_gd_type )
-    DESERIALIZATION_MAP[ config_gd_type ] = config[2]
-    
-    ## serialization map
-    config_py_type = config[1]
-    if config_py_type in SERIALIZATION_MAP:
-        raise ValueError( "invalid CONFIG_LIST: Python type %s already defined" % config_py_type )
-    SERIALIZATION_MAP[ config_py_type ] = ( config_gd_type, config[3] )
 
 
 ## ======================================================================
@@ -455,3 +247,228 @@ def serialize_type( value, data: BytesContainer ):
 # 
 #     raise ValueError( "unable to serialize data: %s %s" % ( value, type(value) ) )
 #     #_LOGGER.warning( "unable to serialize data: %s %s", value, type(value) )
+
+
+## ======================================================================
+
+
+def deserialize_none( data_flags: int, data: BytesContainer ):
+    return None
+
+def serialize_none( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+
+## =========================================================
+
+def deserialize_bool( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        _LOGGER.error( "invalid packet -- too short: %s", data )
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    data_value = data.popInt()
+    proper_data = data_value > 0
+    return proper_data
+
+def serialize_bool( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    data.pushInt( value )
+
+## =========================================================
+
+def deserialize_int( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    proper_data = data.popInt()
+    if proper_data & 0x80000000:
+        ## got negative number
+        neg_val = proper_data & 0x7FFFFFFF
+        return -0x80000000 + neg_val
+#         return proper_data & 0x7FFFFFFF | ~0x7FFFFFFF
+    else:
+        ## positive number
+        return proper_data
+
+def serialize_int( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    if value & 0x80000000:
+        ## got negative number
+        pos_val = value & 0x7FFFFFFF
+        out = 0x80000000 + pos_val
+        data.pushInt( out )
+    else:
+        ## positive number
+        data.pushInt( value )
+
+## =========================================================
+
+def deserialize_float( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    encoded_64 = (data_flags & 1) == 1
+    if encoded_64:
+        if data_len < 8:
+            raise ValueError( "invalid packet -- too short: %s" % data )
+        proper_data = data.popFloat64()
+        return proper_data
+    ## 32 bit variant
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    proper_data = data.popFloat32()
+    return proper_data
+
+def serialize_float( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 1, data_type_id )
+    data.pushFloat64( value )
+
+## =========================================================
+
+def deserialize_string( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    string_len = data.popInt()
+    if string_len < 1:
+        return ""
+    proper_data = data.popString( string_len )
+    return proper_data
+
+def serialize_string( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    str_len = len( value )
+    data.pushInt( str_len )
+    data.pushString( value )
+    remaining = str_len % 4
+    padding = 4 - remaining
+    if padding < 4:
+        data.pushZeros( padding )
+
+## =========================================================
+
+def deserialize_color( data_flags: int, data: BytesContainer ):
+    ## RGBA
+    red   = data.popFloat32()
+    green = data.popFloat32()
+    blue  = data.popFloat32()
+    alpha = data.popFloat32()
+    return ( red, green, blue, alpha )
+
+def serialize_color( data_type_id, value, data: BytesContainer ):
+    if len( value ) != 4:
+        raise ValueError( "invalid input value, 4 elements tuple expected: %s" % data )
+    data.pushFlagsType( 0, data_type_id )
+    ## RGBA
+    data.pushFloat32( value[0] )
+    data.pushFloat32( value[1] )
+    data.pushFloat32( value[2] )
+    data.pushFloat32( value[3] )
+
+## =========================================================
+
+def deserialize_dict( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    data_header = data.popInt()
+    list_size   = data_header & 0x7FFFFFFF
+#         shared_flag = data_header & 0x80000000
+    if list_size < 1:
+        return {}
+
+    proper_data = {}
+    for _ in range(0, list_size):
+        key_value  = deserialize_type( data )
+        item_value = deserialize_type( data )
+        proper_data[ key_value ] = item_value
+    return proper_data
+
+def serialize_dict( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    dict_size = len( value )
+#             shared_flag = 0 & 0x80000000
+#             data_header = shared_flag & list_size & 0x7FFFFFFF
+    data_header = dict_size & 0x7FFFFFFF
+    data.pushInt( data_header )
+    for key in value:
+        serialize_type( key, data )
+        sub_value = value[ key ]
+        serialize_type( sub_value, data )
+
+## =========================================================
+
+def deserialize_list( data_flags: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: %s" % data )
+    data_header = data.popInt()
+    list_size   = data_header & 0x7FFFFFFF
+#         shared_flag = data_header & 0x80000000
+    if list_size < 1:
+        return []
+
+    proper_data = []
+    for _ in range(0, list_size):
+        item_value = deserialize_type( data )
+        proper_data.append( item_value )
+    return proper_data
+
+def serialize_list( data_type_id, value, data: BytesContainer ):
+    data.pushFlagsType( 0, data_type_id )
+    list_size = len( value )
+#             shared_flag = 0 & 0x80000000
+#             data_header = shared_flag & list_size & 0x7FFFFFFF
+    data_header = list_size & 0x7FFFFFFF
+    data.pushInt( data_header )
+    for i in range(0, list_size):
+        sub_value = value[ i ]
+        serialize_type( sub_value, data )
+
+## =========================================================
+
+def deserialize_uninplemented( data_flags: int, data: BytesContainer ):
+    raise NotImplementedError( "stub deserialization used: implement/use proper function" )
+
+def serialize_uninplemented( data_type_id, value, data: BytesContainer ):
+    raise NotImplementedError( "stub serialization used: implement/use proper function" )
+
+
+## ======================================================================
+
+
+"""
+types configuration for serialization and deserialization
+<deserialize_function> converts given Godot type in form of binary array into Python equivalent
+<serialize_function>   converts Python value into binary array representing Godot type
+"""
+CONFIG_LIST = [
+    ( GodotType.NULL,   type(None), deserialize_none,   serialize_none ),
+    ( GodotType.BOOL,   bool,       deserialize_bool,   serialize_bool ),
+    ( GodotType.INT,    int,        deserialize_int,    serialize_int ),
+    ( GodotType.FLOAT,  float,      deserialize_float,  serialize_float ),
+    ( GodotType.STRING, str,        deserialize_string, serialize_string ),
+    ( GodotType.COLOR,  tuple,      deserialize_color,  serialize_color ),
+    ( GodotType.DICT,   dict,       deserialize_dict,   serialize_dict ),
+    ( GodotType.LIST,   list,       deserialize_list,   serialize_list )
+
+#     ( GodotType.BOOL,  bool,        deserialize_uninplemented,  serialize_uninplemented ),
+]
+
+
+## ======================================================================
+
+
+## calculate proper maps and validate configuration
+DESERIALIZATION_MAP = {}        ## map GodotType to deserialization function
+SERIALIZATION_MAP   = {}
+
+for config in CONFIG_LIST:
+    ## deserialization map
+    config_gd_type = config[0]
+    if config_gd_type in DESERIALIZATION_MAP:
+        raise ValueError( "invalid CONFIG_LIST: Godot type %s already defined" % config_gd_type )
+    DESERIALIZATION_MAP[ config_gd_type ] = config[2]
+    
+    ## serialization map
+    config_py_type = config[1]
+    if config_py_type in SERIALIZATION_MAP:
+        raise ValueError( "invalid CONFIG_LIST: Python type %s already defined" % config_py_type )
+    SERIALIZATION_MAP[ config_py_type ] = ( config_gd_type, config[3] )
