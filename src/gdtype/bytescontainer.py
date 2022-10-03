@@ -23,6 +23,7 @@
 
 import logging
 import struct
+from typing import List
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +58,13 @@ class BytesContainer:
         proper_data = struct.unpack( "<f", raw )
         proper_data = proper_data[0]
         return proper_data
+
+    def popFloat32Items(self, items):
+        retList = []
+        for _ in range(0, items):
+            value = self.popFloat32()
+            retList.append( value )
+        return retList
 
     def popFloat64(self):
         raw = self.pop(8)
@@ -96,6 +104,10 @@ class BytesContainer:
     def pushFloat32(self, value: float):
         raw = struct.pack( "<f", value )
         self.push( raw )
+
+    def pushFloat32Items(self, value_array: List[float] ):
+        for item in value_array:
+            self.pushFloat32( item )
 
     def pushFloat64(self, value: float):
         raw = struct.pack( "<d", value )

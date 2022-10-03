@@ -102,7 +102,7 @@ func test_data( input_data ):
     if test_data != input_data:
         var input_buffer  = read_file( tmp_in )
         var output_buffer = read_file( tmp_out )
-        print( "invalid conversion of ", input_data, " to ", test_data )
+        print( "invalid serialization/deserialization of ", type_name( input_data ), " ", input_data, " received ", type_name( input_data ), " ", test_data )
         print( "input data:  ", Utils.print_hex( input_buffer ) )
         print( "output data: ", Utils.print_hex( output_buffer ) )
         return false
@@ -127,4 +127,17 @@ func execute():
     
     ## color
     data = Color( 0.5, 0.0, 1.0 )
+    test_data( data )
+    
+    ## vector3
+    data = Vector3( 0.5, 0.0, 1.0 )
+    test_data( data )
+    
+    # Transform
+    data = Transform3D()
+    data = data.translated( Vector3( 0.5, 0.0, 1.0 ) )
+    test_data( data )
+    
+    # string name
+    data = StringName( "asdfg" )
     test_data( data )

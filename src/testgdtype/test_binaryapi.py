@@ -23,12 +23,35 @@
 
 import unittest
 
-from gdtype.binaryapi import deserialize, serialize
+from gdtype.binaryapi import deserialize, serialize, Transform3D
 
 
 #TODO: add tests for invalid input (check exceptions)
 #TODO: add test for CONFIG_LIST: serialize and deserialize and compare results
 #TODO: add tests inside GDScript (call python code from gdsript)
+
+
+class Transform3DTest(unittest.TestCase):
+    def setUp(self):
+        ## Called before testfunction is executed
+        pass
+
+    def tearDown(self):
+        ## Called after testfunction was executed
+        pass
+
+    def test_indexing_1d(self):
+        raw_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        data = Transform3D( raw_data )
+        
+        self.assertEqual( data[0], 1 )
+        self.assertEqual( data.get(0, 0), 1 )
+        
+        self.assertEqual( data[1], 2 )
+        self.assertEqual( data.get(0, 1), 2 )
+        
+        self.assertEqual( data[2], 3 )
+        self.assertEqual( data.get(0, 2), 3 )
 
 
 class DeserializeTest(unittest.TestCase):
