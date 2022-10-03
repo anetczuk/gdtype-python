@@ -3,10 +3,10 @@
 set -eu
 
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CFG_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SCRIPT_NAME=`basename "$0"`
 
-CONFIG_PATH="$SCRIPT_DIR/config.cfg"
+CONFIG_PATH="$CFG_SCRIPT_DIR/../config.cfg"
 ##CONFIG_PATH="$SCRIPT_DIR/$SCRIPT_NAME.cfg"
 
 if [ ! -f $CONFIG_PATH ]; then
