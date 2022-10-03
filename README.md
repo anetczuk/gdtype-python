@@ -25,6 +25,14 @@ gdObject = gdtype.deserialize( rawData )
 ```
 
 
+## Running tests
+
+Checking library functionality can be done by executing one of following scripts:
+- `./src/testgdtype/runtests.py` for executing unit tests
+- `./test/run_tests.sh` for executing integration tests using Godot
+- `./test/samples.sh` for generating samples using Godot
+
+
 ## References
 
-- Godot Binary serialization API (https://docs.godotengine.org/en/stable/tutorials/io/binary_serialization_api.html)
+- [Godot Binary serialization API (stable)](https://docs.godotengine.org/en/stable/tutorials/io/binary_serialization_api.html)
