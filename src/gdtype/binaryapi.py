@@ -25,6 +25,7 @@ import logging
 from enum import IntEnum, unique
 from typing import Dict, Tuple, Callable, Any
 from dataclasses import dataclass
+from types import FunctionType
 
 from gdtype.bytescontainer import BytesContainer
 
@@ -264,8 +265,8 @@ class Vector3():
     x: float = 0.0
     y: float = 0.0
     z: float = 0.0
-    
-    def __init__( self, data_array = None ):
+
+    def __init__( self, data_array=None ):
         if data_array is None:
             return
         if len(data_array) != 3:
@@ -299,8 +300,8 @@ def serialize_vector3( gd_type_id: int, value: Vector3, data: BytesContainer ):
 class Transform3D():
     ## has 3 rows and 4 columns
     values: list
-    
-    def __init__( self, data_array = None ):
+
+    def __init__( self, data_array=None ):
         if data_array is None:
             self.values: list = [ 0.0 ] * 12
             return
@@ -340,7 +341,7 @@ class Color():
     blue: float  = 0.0
     alpha: float = 0.0
 
-    def __init__( self, data_array = None ):
+    def __init__( self, data_array=None ):
         if data_array is None:
             return
         if len(data_array) != 4:
@@ -373,7 +374,7 @@ def serialize_color( gd_type_id: int, value: Color, data: BytesContainer ):
 
 @dataclass
 class StringName():
-    value: str
+    value: str = ""
 
 
 # def deserialize_color( data_flags: int, data: BytesContainer ):
@@ -383,7 +384,7 @@ def deserialize_stringname( _: int, data: BytesContainer ) -> StringName:
         raise ValueError( f"invalid packet -- too short: {data}" )
     string_len = data.popInt()
     if string_len < 1:
-        return ""
+        return StringName()
     proper_data = data.popString( string_len )
     return StringName( proper_data )
 
@@ -518,7 +519,8 @@ CONFIG_LIST = [
 
 ## calculate proper maps and validate configuration
 DESERIALIZATION_MAP: Dict[ GodotType, Callable[[int, BytesContainer], Any] ] = {}
-SERIALIZATION_MAP: Dict[ object, Tuple[GodotType, Callable[[int, Any, BytesContainer], Any]] ] = {}
+SERIALIZATION_MAP: Dict[ object, Tuple[GodotType, FunctionType] ] = {}
+# SERIALIZATION_MAP: Dict[ object, Tuple[GodotType, Callable[[int, Any, BytesContainer], Any]] ] = {}
 
 for config in CONFIG_LIST:
     ## deserialization map
@@ -531,7 +533,7 @@ for config in CONFIG_LIST:
     config_py_type: object = config[1]
     if config_py_type in SERIALIZATION_MAP:
         raise ValueError( f"invalid CONFIG_LIST: Python type {config_py_type} already defined" )
-    func_ptr = config[3]
+    func_ptr: FunctionType = config[3]                              # type: ignore
     SERIALIZATION_MAP[ config_py_type ] = ( gd_type, func_ptr )
 
 

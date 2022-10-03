@@ -43,13 +43,13 @@ class Transform3DTest(unittest.TestCase):
     def test_indexing_1d(self):
         raw_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         data = Transform3D( raw_data )
-        
+
         self.assertEqual( data[0], 1 )
         self.assertEqual( data.get(0, 0), 1 )
-        
+
         self.assertEqual( data[1], 2 )
         self.assertEqual( data.get(0, 1), 2 )
-        
+
         self.assertEqual( data[2], 3 )
         self.assertEqual( data.get(0, 2), 3 )
 
