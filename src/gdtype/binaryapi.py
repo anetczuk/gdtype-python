@@ -23,8 +23,9 @@
 
 import logging
 from enum import IntEnum, unique
-from typing import Dict, Tuple, Callable, Any
 from dataclasses import dataclass
+
+from typing import List, Dict, Tuple, Callable, Any
 from types import FunctionType
 
 from .bytescontainer import BytesContainer
@@ -37,7 +38,7 @@ def deserialize( message: bytes ):
     mess_len = len( message )
     if mess_len < 4:
         _LOGGER.error( "invalid packet -- too short: %s", message )
-        raise ValueError( f"invalid packet -- too short: {mess_len} < 4 for {message}" )
+        raise ValueError( f"invalid packet -- too short: {mess_len} < 4 for {message!r}" )
 
     data = BytesContainer( message )
     expected_size = data.popInt()
@@ -496,7 +497,7 @@ def serialize_list( gd_type_id: int, value, data: BytesContainer ):
 
 @dataclass
 class Vector3Array():
-    items = []        ## list of tuples(x, y, z)
+    items: List[ Tuple[int, int, int] ] = []        ## list of tuples(x, y, z)
 
     def __len__(self):
         return len( self.items )

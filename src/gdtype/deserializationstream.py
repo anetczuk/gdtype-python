@@ -59,7 +59,7 @@ class DeserializationStream:
             return (False, check_size)
         data = self._deserialize()
         return (True, data)
-    
+
     def _deserialize(self):
         expected_size = self.buffer.popInt()
         message_size  = self.buffer.size()
