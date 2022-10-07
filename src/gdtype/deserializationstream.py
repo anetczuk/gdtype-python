@@ -32,8 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class DeserializationStream:
 
-    def __init__(self):
-        self.buffer = BytesContainer()
+    def __init__(self, data: bytes = None):
+        self.buffer = BytesContainer( data )
 
     def __len__(self):
         return len( self.buffer )
@@ -63,7 +63,7 @@ class DeserializationStream:
     def _deserialize(self):
         expected_size = self.buffer.popInt()
         message_size  = self.buffer.size()
-        if message_size != expected_size:
+        if message_size < expected_size:
             _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", self.buffer )
-            raise ValueError( f"message size mismatch: {message_size} != {expected_size} for {self.buffer}" )
+            raise ValueError( f"message size mismatch: {message_size} < {expected_size} for {self.buffer}" )
         return binaryapi.deserialize_type( self.buffer )
