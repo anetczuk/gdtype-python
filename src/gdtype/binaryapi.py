@@ -34,17 +34,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def deserialize( message: bytes ):
-    data = BytesContainer( message )
-    data_len = data.size()
-    if data_len < 4:
-        _LOGGER.error( "invalid packet -- too short: %s", data )
-        raise ValueError( f"invalid packet -- too short: {data}" % data )
+    mess_len = len( message )
+    if mess_len < 4:
+        _LOGGER.error( "invalid packet -- too short: %s", message )
+        raise ValueError( f"invalid packet -- too short: {mess_len} < 4 for {message}" )
 
-    packet_size = data.popInt()
-    data_size   = data.size()
-    if data_size != packet_size:
+    data = BytesContainer( message )
+    expected_size = data.popInt()
+    message_size  = data.size()
+    if message_size != expected_size:
         _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", data )
-        raise ValueError( f"packet isze mismatch: {data}" )
+        raise ValueError( f"message size mismatch: {message_size} != {expected_size} for {data}" )
 
     return deserialize_type( data )
 
@@ -68,6 +68,15 @@ def get_message_length( data: bytes ):
         _LOGGER.error( "message is too short: %s", data )
         return None
     return container.popInt()
+
+
+def check_message_size( data: bytes ):
+    curr_size = len( data )
+    if curr_size < 4:
+        return -4 + curr_size
+    expected_size = get_message_length( data )
+    expected_size += 4                              ## increase by message header
+    return curr_size - expected_size
 
 
 ## ======================================================================

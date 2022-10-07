@@ -37,6 +37,9 @@ class BytesContainer:
         if self.data is None:
             self.data = bytes()
 
+    def __len__(self):
+        return len( self.data )
+
     def size(self):
         return len( self.data )
 
