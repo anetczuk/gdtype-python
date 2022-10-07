@@ -30,7 +30,6 @@ from .bytescontainer import BytesContainer
 _LOGGER = logging.getLogger(__name__)
 
 
-## mutable wrapper for bytes
 class DeserializationStream:
 
     def __init__(self):
