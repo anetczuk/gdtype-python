@@ -27,7 +27,7 @@ from typing import Dict, Tuple, Callable, Any
 from dataclasses import dataclass
 from types import FunctionType
 
-from gdtype.bytescontainer import BytesContainer
+from .bytescontainer import BytesContainer
 
 
 _LOGGER = logging.getLogger(__name__)
