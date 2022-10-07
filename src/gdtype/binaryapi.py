@@ -62,6 +62,7 @@ def serialize( value ) -> bytes:
     return message.data
 
 
+## read header value of message and return it
 def get_message_length( data: bytes ):
     container = BytesContainer( data )
     if container.size() < 4:
@@ -70,11 +71,19 @@ def get_message_length( data: bytes ):
     return container.popInt()
 
 
-def check_message_size( data: bytes ):
-    curr_size = len( data )
+## return:
+##        0         if buffer contains full message without additional bytes
+##        negative  if there is missing data (how many bytes are missing)
+##        positive  if there are additional bytes (part of next message in case of TCP/IP)
+##
+## whole message consists of header and remaining data
+## header is 4 bytes integer containing size of remaining data
+## so whole message is sum of value in header increased by size of header itself
+def check_message_size( buffer: bytes ):
+    curr_size = len( buffer )
     if curr_size < 4:
         return -4 + curr_size
-    expected_size = get_message_length( data )
+    expected_size = get_message_length( buffer )
     expected_size += 4                              ## increase by message header
     return curr_size - expected_size
 
