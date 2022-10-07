@@ -262,8 +262,8 @@ def deserialize_string( _: int, data: BytesContainer ):
         return ""
     proper_data = data.popString( string_len )
     remaining = string_len % 4
-    padding = 4 - remaining
-    if padding > 0:
+    if remaining > 0:
+        padding = 4 - remaining
         ## pop remaining padding (zero bytes)
         data.pop( padding )
     return proper_data
@@ -275,8 +275,8 @@ def serialize_string( gd_type_id: int, value, data: BytesContainer ):
     data.pushInt( str_len )
     data.pushString( value )
     remaining = str_len % 4
-    padding = 4 - remaining
-    if padding < 4:
+    if remaining > 0:
+        padding = 4 - remaining
         data.pushZeros( padding )
 
 
@@ -491,6 +491,56 @@ def serialize_list( gd_type_id: int, value, data: BytesContainer ):
         serialize_type( sub_value, data )
 
 
+## =========================================================
+
+
+@dataclass
+class Vector3Array():
+    items = []        ## list of tuples(x, y, z)
+
+    def __len__(self):
+        return len( self.items )
+
+    def __getitem__( self, index ):
+        return self.items[ index ]
+
+    def append( self, xcoord, ycoord, zcoord ):
+        self.items.append( (xcoord, ycoord, zcoord) )
+
+
+# def deserialize_list( data_flags: int, data: BytesContainer ):
+def deserialize_vec3array( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt()
+    list_size   = data_header
+    if list_size < 1:
+        return []
+
+    proper_data = Vector3Array()
+    for _ in range(0, list_size):
+        x_val = data.popFloat32()
+        y_val = data.popFloat32()
+        z_val = data.popFloat32()
+        proper_data.append( x_val, y_val, z_val )
+    return proper_data
+
+
+def serialize_vec3array( gd_type_id: int, value, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+#             shared_flag = 0 & 0x80000000
+#             data_header = shared_flag & list_size & 0x7FFFFFFF
+    data_header = list_size
+    data.pushInt( data_header )
+    for i in range(0, list_size):
+        item = value[ i ]
+        data.pushFloat32( item[0] )
+        data.pushFloat32( item[1] )
+        data.pushFloat32( item[2] )
+
+
 ## ======================================================================
 
 
@@ -507,6 +557,7 @@ class GodotType( IntEnum ):
     STRINGNAME          = 21
     DICT                = 27
     LIST                = 28
+    PACKEDVECTOR3ARRAY  = 36
 #     PackedColorArray    = 37
 
     @classmethod
@@ -521,19 +572,20 @@ class GodotType( IntEnum ):
 ## <deserialize_function> converts given Godot type in form of binary array into Python equivalent
 ## <serialize_function>   converts Python value into binary array representing Godot type
 CONFIG_LIST = [
-    ( GodotType.NULL,          type(None),   deserialize_none,         serialize_none ),
-    ( GodotType.BOOL,          bool,         deserialize_bool,         serialize_bool ),
-    ( GodotType.INT,           int,          deserialize_int,          serialize_int ),
-    ( GodotType.FLOAT,         float,        deserialize_float,        serialize_float ),
-    ( GodotType.STRING,        str,          deserialize_string,       serialize_string ),
-    ( GodotType.VECTOR3,       Vector3,      deserialize_vector3,      serialize_vector3 ),
-    ( GodotType.TRANSFORM3D,   Transform3D,  deserialize_transform3d,  serialize_transform3d ),
-    ( GodotType.COLOR,         Color,        deserialize_color,        serialize_color ),
-    ( GodotType.STRINGNAME,    StringName,   deserialize_stringname,   serialize_stringname ),
-    ( GodotType.DICT,          dict,         deserialize_dict,         serialize_dict ),
-    ( GodotType.LIST,          list,         deserialize_list,         serialize_list )
+    ( GodotType.NULL.value,                 type(None),     deserialize_none,         serialize_none ),
+    ( GodotType.BOOL.value,                 bool,           deserialize_bool,         serialize_bool ),
+    ( GodotType.INT.value,                  int,            deserialize_int,          serialize_int ),
+    ( GodotType.FLOAT.value,                float,          deserialize_float,        serialize_float ),
+    ( GodotType.STRING.value,               str,            deserialize_string,       serialize_string ),
+    ( GodotType.VECTOR3.value,              Vector3,        deserialize_vector3,      serialize_vector3 ),
+    ( GodotType.TRANSFORM3D.value,          Transform3D,    deserialize_transform3d,  serialize_transform3d ),
+    ( GodotType.COLOR.value,                Color,          deserialize_color,        serialize_color ),
+    ( GodotType.STRINGNAME.value,           StringName,     deserialize_stringname,   serialize_stringname ),
+    ( GodotType.DICT.value,                 dict,           deserialize_dict,         serialize_dict ),
+    ( GodotType.LIST.value,                 list,           deserialize_list,         serialize_list ),
+    ( GodotType.PACKEDVECTOR3ARRAY.value,   Vector3Array,   deserialize_vec3array,    serialize_vec3array )
 
-    # ( GodotType.BOOL,  bool,        deserialize_uninplemented,  serialize_uninplemented ),
+    # ( GodotType.BOOL.value,  bool,        deserialize_uninplemented,  serialize_uninplemented ),
 ]
 
 
@@ -541,13 +593,13 @@ CONFIG_LIST = [
 
 
 ## calculate proper maps and validate configuration
-DESERIALIZATION_MAP: Dict[ GodotType, Callable[[int, BytesContainer], Any] ] = {}
-SERIALIZATION_MAP: Dict[ object, Tuple[GodotType, FunctionType] ] = {}
-# SERIALIZATION_MAP: Dict[ object, Tuple[GodotType, Callable[[int, Any, BytesContainer], Any]] ] = {}
+DESERIALIZATION_MAP: Dict[ int, Callable[[int, BytesContainer], Any] ] = {}
+SERIALIZATION_MAP: Dict[ object, Tuple[int, FunctionType] ] = {}
+# SERIALIZATION_MAP: Dict[ object, Tuple[int, Callable[[int, Any, BytesContainer], Any]] ] = {}
 
 for config in CONFIG_LIST:
     ## deserialization map
-    gd_type: GodotType = config[0]
+    gd_type: int = config[0]
     if gd_type in DESERIALIZATION_MAP:
         raise ValueError( f"invalid CONFIG_LIST: Godot type {gd_type} already defined" )
     DESERIALIZATION_MAP[ gd_type ] = config[2]
@@ -561,8 +613,7 @@ for config in CONFIG_LIST:
 
 
 def get_deserialization_function( gd_type_id: int ):
-    data_type = GodotType.fromInt( gd_type_id )
-    deserialize_function = DESERIALIZATION_MAP.get( data_type, None )
+    deserialize_function = DESERIALIZATION_MAP.get( gd_type_id, None )
     if deserialize_function is None:
         raise ValueError( f"invalid CONFIG_LIST: unsupported Godot type {gd_type_id}" )
     return deserialize_function

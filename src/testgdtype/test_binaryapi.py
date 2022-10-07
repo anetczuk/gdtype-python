@@ -129,7 +129,22 @@ class DeserializeTest(unittest.TestCase):
         self.assertEqual( type(data_value), list )
         self.assertEqual( data_value, [1, 2, 3] )
 
-    def test_list_string(self):
+    def test_list_string_01(self):
+        # pylint: disable=C0301
+        raw_bytes = b'\x24\x00\x00\x00\x1c\x00\x00\x00\x02\x00\x00\x00\x04\x00\x00\x00\x08\x00\x00\x00REG_RESP\x04\x00\x00\x00\x01\x00\x00\x00\x61\x00\x00\x00'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), list )
+        self.assertEqual( data_value, [ 'REG_RESP', 'a' ] )
+
+    def test_list_string_02(self):
+        # pylint: disable=C0301
+        raw_bytes = b'D\x00\x00\x00\x1c\x00\x00\x00\x02\x00\x00\x00\x04\x00\x00\x00\x08\x00\x00\x00REG_RESP\x04\x00\x00\x00$\x00\x00\x002e0434f5-6755-4460-b860-5ea50fbf6640'
+        data_value = deserialize( raw_bytes )
+
+        self.assertEqual( type(data_value), list )
+        self.assertEqual( data_value, ['REG_RESP', '2e0434f5-6755-4460-b860-5ea50fbf6640'] )
+
+    def test_list_string_03(self):
         # pylint: disable=C0301
         raw_bytes = b',\x00\x00\x00\x1c\x00\x00\x00\x02\x00\x00\x00\x04\x00\x00\x00\t\x00\x00\x00VEH_STATE\x00\x00\x00\x04\x00\x00\x00\x07\x00\x00\x00player1\x00'
         data_value = deserialize( raw_bytes )
