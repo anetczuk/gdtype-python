@@ -243,6 +243,11 @@ def deserialize_string( _: int, data: BytesContainer ):
     if string_len < 1:
         return ""
     proper_data = data.popString( string_len )
+    remaining = string_len % 4
+    padding = 4 - remaining
+    if padding > 0:
+        ## pop remaining padding (zero bytes)
+        data.pop( padding )
     return proper_data
 
 

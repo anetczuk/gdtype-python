@@ -21,6 +21,9 @@ func execute():
     
     data = "ab"
     print( "string ", data, "\n", Utils.serialized_representation( data ) )
+    
+    data = "DO_STEP"
+    print( "string ", data, "\n", Utils.serialized_representation( data ) )
 
     data = ""
     print( "string ", data, "\n", Utils.serialized_representation( data ) )

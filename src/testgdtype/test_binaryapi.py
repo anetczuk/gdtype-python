@@ -104,6 +104,12 @@ class DeserializeTest(unittest.TestCase):
         self.assertEqual( type(data_value), str )
         self.assertEqual( data_value, "aaa2" )
 
+    def test_string_DO_STEP(self):
+        raw_bytes = b'\x10\x00\x00\x00\x04\x00\x00\x00\x07\x00\x00\x00DO_STEP\x00'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), str )
+        self.assertEqual( data_value, "DO_STEP" )
+
     def test_string_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00'
         data_value = deserialize( raw_bytes )
@@ -122,6 +128,13 @@ class DeserializeTest(unittest.TestCase):
         data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), list )
         self.assertEqual( data_value, [1, 2, 3] )
+
+    def test_list_string(self):
+        # pylint: disable=C0301
+        raw_bytes = b',\x00\x00\x00\x1c\x00\x00\x00\x02\x00\x00\x00\x04\x00\x00\x00\t\x00\x00\x00VEH_STATE\x00\x00\x00\x04\x00\x00\x00\x07\x00\x00\x00player1\x00'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), list )
+        self.assertEqual( data_value, [ 'VEH_STATE', 'player1' ] )
 
     def test_dict_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x1b\x00\x00\x00\x00\x00\x00\x00'
