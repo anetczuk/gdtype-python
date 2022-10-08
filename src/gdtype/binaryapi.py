@@ -53,12 +53,12 @@ def deserialize( message: bytes ):
 def serialize( value ) -> bytes:
     data = BytesContainer()
     serialize_type( value, data )
-    if data.size() < 1:
+    data_size = data.size()
+    if data_size < 1:
         ## failed to serialize data
         raise ValueError( "failed to serialize: empty output data" )
     message = BytesContainer()
-    header_size = data.size()
-    message.pushInt( header_size )
+    message.pushInt( data_size )        ## set header
     message.push( data.data )
     return message.data
 

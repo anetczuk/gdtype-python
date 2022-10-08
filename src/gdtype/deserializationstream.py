@@ -44,6 +44,9 @@ class DeserializationStream:
     def size(self):
         return len( self.buffer )
 
+    def clear(self):
+        self.buffer = BytesContainer()
+
     def appendData(self, data: bytes):
         self.buffer.push( data )
 
@@ -59,6 +62,13 @@ class DeserializationStream:
             return (False, check_size)
         data = self._deserialize()
         return (True, data)
+
+    def receiveList(self):
+        ret_list = []
+        while binaryapi.check_message_size( self.buffer.data ) >= 0:
+            data = self._deserialize()
+            ret_list.append( data )
+        return ret_list
 
     def _deserialize(self):
         expected_size = self.buffer.popInt()
