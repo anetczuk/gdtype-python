@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/lib/read_config.sh"
 read_engine_path
 
 
-SCRIPT_PATH="$SCRIPT_DIR/lib/tests.gd"
+SCRIPT_PATH="$SCRIPT_DIR/lib/gd_tests.gd"
 
 
 cd $SCRIPT_DIR
