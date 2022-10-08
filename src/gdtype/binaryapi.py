@@ -23,7 +23,7 @@
 
 import logging
 from enum import IntEnum, unique
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from typing import List, Dict, Tuple, Callable, Any
 from types import FunctionType
@@ -497,7 +497,7 @@ def serialize_list( gd_type_id: int, value, data: BytesContainer ):
 
 @dataclass
 class Vector3Array():
-    items: List[ Tuple[int, int, int] ] = []        ## list of tuples(x, y, z)
+    items: List[ Tuple[int, int, int] ] = field(default_factory=list)        ## list of tuples(x, y, z)
 
     def __len__(self):
         return len( self.items )
