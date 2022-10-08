@@ -2,6 +2,7 @@
 ##
 
 extends MainLoop
+
 func _initialize():
     execute()
 func _process( delta ):
@@ -55,8 +56,11 @@ const TYPE_DICT = {
     TYPE_PACKED_VECTOR2_ARRAY: "TYPE_PACKED_VECTOR2_ARRAY",
     TYPE_PACKED_VECTOR3_ARRAY: "TYPE_PACKED_VECTOR3_ARRAY",         ## 36 0x24
     TYPE_PACKED_COLOR_ARRAY: "TYPE_PACKED_COLOR_ARRAY",
-    TYPE_MAX: "TYPE_MAX"
+    TYPE_MAX: "TYPE_MAX"                                            ## 38 0x26
 }
+
+
+var valid: bool = true
 
 
 func type_name( data ):
@@ -92,6 +96,7 @@ func test_data( input_data ):
         print( "error occur during serialization/deserialization of godot type: ", type_name(input_data) )
         print( "exit code: ", exit_code )
         print( "output:\n", words )
+        valid = false
         return false
 
     var data_in = File.new()
@@ -105,6 +110,7 @@ func test_data( input_data ):
         print( "invalid serialization/deserialization of ", type_name( input_data ), " ", input_data, " received ", type_name( input_data ), " ", test_data )
         print( "input data:  ", Utils.print_hex( input_buffer ) )
         print( "output data: ", Utils.print_hex( output_buffer ) )
+        valid = false
         return false
 
     return true
@@ -150,3 +156,8 @@ func execute():
     data.append( Vector3( 0.5, 0.0, 1.0 ) )
     data.append( Vector3( 0.6, 0.1, 1.1 ) )
     test_data( data )
+    
+    if valid:
+        print( "tests passed" )
+    else:
+        print( "some tests failed" )
