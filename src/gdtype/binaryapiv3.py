@@ -897,16 +897,11 @@ class RID():
 
 
 def deserialize_RID( _: int, data: BytesContainer ) -> RID:
-    data_len = data.size()
-    if data_len < 8:
-        raise ValueError( f"invalid packet -- too short: {data}" )
-    rid_id = data.popInt64()
-    return RID(rid_id)
+    raise ValueError( "RID type not supported: {data}" )
 
 
 def serialize_RID( gd_type_id: int, value: RID, data: BytesContainer ):
-    data.pushFlagsType( 0, gd_type_id )
-    data.pushInt64( value.id )
+    raise ValueError( "RID type not supported: {data}" )
 
 
 ## =========================================================
@@ -1393,38 +1388,27 @@ class GodotType( IntEnum ):
     FLOAT               = 3
     STRING              = 4
     VECTOR2             = 5
-    VECTOR2I            = 6
-    RECT2               = 7
-    RECT2I              = 8
-    VECTOR3             = 9
-    VECTOR3I            = 10
-    TRANSFORM2D         = 11
-    VECTOR4             = 12
-    VECTOR4I            = 13
-    PLANE               = 14
-    QUATERNION          = 15
-    AABB                = 16
-    BASIS               = 17
-    TRANSFORM3D         = 18
-    PROJECTION          = 19
-    COLOR               = 20
-    STRINGNAME          = 21
-    NODEPATH            = 22
-    RID                 = 23
-#     OBJECT              = 24
-#     CALLABLE            = 25
-#     SIGNAL              = 26
-    DICT                = 27
-    LIST                = 28
-    PACKEDBYTEARRAY     = 29
-    PACKEDINT32ARRAY    = 30
-    PACKEDINT64ARRAY    = 31
-    PACKEDFLOAT32ARRAY  = 32
-    PACKEDFLOAT64ARRAY  = 33
-    PACKEDSTRINGARRAY   = 34
-    PACKEDVECTOR2ARRAY  = 35
-    PACKEDVECTOR3ARRAY  = 36
-    PACKEDCOLORARRAY    = 37
+    RECT2               = 6
+    VECTOR3             = 7
+    TRANSFORM2D         = 8
+    PLANE               = 9
+    QUAT                = 10
+    AABB                = 11
+    BASIS               = 12
+    TRANSFORM           = 13
+    COLOR               = 14
+    NODEPATH            = 15
+    RID                 = 16
+#     OBJECT              = 17
+    DICT                = 18
+    LIST                = 19
+    POOLBYTEARRAY       = 20
+    POOLINT32ARRAY      = 21
+    POOLFLOAT32ARRAY    = 22
+    POOLSTRINGARRAY     = 23
+    POOLVECTOR2ARRAY    = 24
+    POOLVECTOR3ARRAY    = 25
+    POOLCOLORARRAY      = 26
 
     @classmethod
     def fromInt(cls, value):
@@ -1449,35 +1433,26 @@ CONFIG_LIST: List[ Tuple ] = [
     ( GodotType.FLOAT.value,                float,          deserialize_float,        serialize_float ),
     ( GodotType.STRING.value,               str,            deserialize_string,       serialize_string ),
     ( GodotType.VECTOR2.value,              Vector2,        deserialize_vector2,      serialize_vector2 ),
-    ( GodotType.VECTOR2I.value,             Vector2i,       deserialize_vector2i,     serialize_vector2i ),
     ( GodotType.RECT2.value,                Rect2,          deserialize_Rect2,        serialize_Rect2 ),
-    ( GodotType.RECT2I.value,               Rect2i,         deserialize_Rect2i,       serialize_Rect2i ),
     ( GodotType.VECTOR3.value,              Vector3,        deserialize_vector3,      serialize_vector3 ),
-    ( GodotType.VECTOR3I.value,             Vector3i,       deserialize_vector3i,     serialize_vector3i ),
     ( GodotType.TRANSFORM2D.value,          Transform2D ),
-    ( GodotType.VECTOR4.value,              Vector4 ),
-    ( GodotType.VECTOR4I.value,             Vector4i ),
     ( GodotType.PLANE.value,                Plane ),
-    ( GodotType.QUATERNION.value,           Quaternion ),
+    ( GodotType.QUAT.value,                 Quaternion ),
     ( GodotType.AABB.value,                 AABB ),
     ( GodotType.BASIS.value,                Basis ),
-    ( GodotType.TRANSFORM3D.value,          Transform3D ),
-    ( GodotType.PROJECTION.value,           Projection ),
+    ( GodotType.TRANSFORM.value,            Transform3D ),
     ( GodotType.COLOR.value,                Color ),
-    ( GodotType.STRINGNAME.value,           StringName ),
     ( GodotType.NODEPATH.value,             NodePath ),
     ( GodotType.RID.value,                  RID ),
     ( GodotType.DICT.value,                 dict,           deserialize_dict,         serialize_dict ),
     ( GodotType.LIST.value,                 list,           deserialize_list,         serialize_list ),
-    ( GodotType.PACKEDBYTEARRAY.value,      ByteArray ),
-    ( GodotType.PACKEDINT32ARRAY.value,     Int32Array ),
-    ( GodotType.PACKEDINT64ARRAY.value,     Int64Array ),
-    ( GodotType.PACKEDFLOAT32ARRAY.value,   Float32Array ),
-    ( GodotType.PACKEDFLOAT64ARRAY.value,   Float64Array ),
-    ( GodotType.PACKEDSTRINGARRAY.value,    StringArray ),
-    ( GodotType.PACKEDVECTOR2ARRAY.value,   Vector2Array ),
-    ( GodotType.PACKEDVECTOR3ARRAY.value,   Vector3Array ),
-    ( GodotType.PACKEDCOLORARRAY.value,     ColorArray )
+    ( GodotType.POOLBYTEARRAY.value,        ByteArray ),
+    ( GodotType.POOLINT32ARRAY.value,       Int32Array ),
+    ( GodotType.POOLFLOAT32ARRAY.value,     Float32Array ),
+    ( GodotType.POOLSTRINGARRAY.value,      StringArray ),
+    ( GodotType.POOLVECTOR2ARRAY.value,     Vector2Array ),
+    ( GodotType.POOLVECTOR3ARRAY.value,     Vector3Array ),
+    ( GodotType.POOLCOLORARRAY.value,       ColorArray )
 
     # ( GodotType.BOOL.value,  bool,        deserialize_uninplemented,  serialize_uninplemented ),
 ]

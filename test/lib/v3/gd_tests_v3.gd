@@ -185,9 +185,9 @@ func execute():
     #data = NodePath( "aaa/bbb" )
     #test_data( data )
 
-    ## RID
-    data = RID()
-    test_data( data )
+    ### RID (not supported)
+    #data = RID()
+    #test_data( data )
 
     ## PoolByteArray
     data = PoolByteArray( [1, 2, 3] )
