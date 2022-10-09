@@ -12,7 +12,7 @@ func _process( delta ):
 ## =========================================================================
 
 
-const Utils = preload( "utils.gd" )
+const Utils = preload( "utilsv4.gd" )
 
 
 ## Godot 4.0 does not allow to access "Variant.Type" and enumerate it's items
@@ -78,10 +78,10 @@ func read_file( file_path: String ):
 
 func test_data( input_data ):
     var curr_dir = ProjectSettings.globalize_path("res://")
-    var handler_path = curr_dir + "./lib/handle_data.sh"
+    var handler_path = curr_dir + "./lib/v4/handle_data.sh"
 
-    var tmp_in  = curr_dir + "./tmp/data_in.bin"
-    var tmp_out = curr_dir + "./tmp/data_out.bin"
+    var tmp_in  = curr_dir + "./tmp/data_in_v4.bin"
+    var tmp_out = curr_dir + "./tmp/data_out_v4.bin"
 
     var data_out = File.new()
     data_out.open( tmp_in, File.WRITE )
@@ -159,10 +159,6 @@ func execute():
     data = Rect2i( 0, 1, 3, 2 )
     test_data( data )
 
-    ## vector2i
-    data = Vector2i( 5, 1 )
-    test_data( data )
-    
     ## vector3
     data = Vector3( 0.5, 0.0, 1.0 )
     test_data( data )

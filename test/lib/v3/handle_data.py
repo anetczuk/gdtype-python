@@ -24,7 +24,7 @@
 import logging
 import argparse
 
-from gdtype.binaryapi import deserialize, serialize
+from gdtype.binaryapiv3 import deserialize, serialize
 
 
 _LOGGER = logging.getLogger(__name__)

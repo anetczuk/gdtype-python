@@ -12,51 +12,40 @@ func _process( delta ):
 ## =========================================================================
 
 
-const Utils = preload( "utils.gd" )
+const Utils = preload( "utilsv3.gd" )
 
 
 ## Godot 4.0 does not allow to access "Variant.Type" and enumerate it's items
 ## so all constants have to be stored within dict
-const TYPE_DICT = {
+var TYPE_DICT = {
     TYPE_NIL: "TYPE_NIL",                                           ## 0 0x00
     TYPE_BOOL: "TYPE_BOOL",
     TYPE_INT: "TYPE_INT",
-    TYPE_FLOAT: "TYPE_FLOAT",
+    TYPE_REAL: "TYPE_REAL",
     TYPE_STRING: "TYPE_STRING",
     TYPE_VECTOR2: "TYPE_VECTOR2",
-    TYPE_VECTOR2I: "TYPE_VECTOR2I",
     TYPE_RECT2: "TYPE_RECT2",
-    TYPE_RECT2I: "TYPE_RECT2I",
     TYPE_VECTOR3: "TYPE_VECTOR3",
-    TYPE_VECTOR3I: "TYPE_VECTOR3I",                                 ## 10 0x0A
     TYPE_TRANSFORM2D: "TYPE_TRANSFORM2D",
-    TYPE_VECTOR4: "TYPE_VECTOR4",
-    TYPE_VECTOR4I: "TYPE_VECTOR4I",
     TYPE_PLANE: "TYPE_PLANE",
-    TYPE_QUATERNION: "TYPE_QUATERNION",
+    TYPE_QUAT: "TYPE_QUAT",                                         ## 10 0x0a
     TYPE_AABB: "TYPE_AABB",
     TYPE_BASIS: "TYPE_BASIS",
-    TYPE_TRANSFORM3D: "TYPE_TRANSFORM3D",
-    TYPE_PROJECTION: "TYPE_PROJECTION",
-    TYPE_COLOR: "TYPE_COLOR",                                       ## 20 0x14
-    TYPE_STRING_NAME: "TYPE_STRING_NAME",
+    TYPE_TRANSFORM: "TYPE_TRANSFORM",
+    TYPE_COLOR: "TYPE_COLOR",
     TYPE_NODE_PATH: "TYPE_NODE_PATH",
     TYPE_RID: "TYPE_RID",
     TYPE_OBJECT: "TYPE_OBJECT",
-    TYPE_CALLABLE: "TYPE_CALLABLE",
-    TYPE_SIGNAL: "TYPE_SIGNAL",
-    TYPE_DICTIONARY: "TYPE_DICTIONARY",                             ## 27 0x1B
-    TYPE_ARRAY: "TYPE_ARRAY",                                       ## 28 0x1C
-    TYPE_PACKED_BYTE_ARRAY: "TYPE_PACKED_BYTE_ARRAY",
-    TYPE_PACKED_INT32_ARRAY: "TYPE_PACKED_INT32_ARRAY",             ## 30 0x1E
-    TYPE_PACKED_INT64_ARRAY: "TYPE_PACKED_INT64_ARRAY",
-    TYPE_PACKED_FLOAT32_ARRAY: "TYPE_PACKED_FLOAT32_ARRAY",
-    TYPE_PACKED_FLOAT64_ARRAY: "TYPE_PACKED_FLOAT64_ARRAY",
-    TYPE_PACKED_STRING_ARRAY: "TYPE_PACKED_STRING_ARRAY",
-    TYPE_PACKED_VECTOR2_ARRAY: "TYPE_PACKED_VECTOR2_ARRAY",
-    TYPE_PACKED_VECTOR3_ARRAY: "TYPE_PACKED_VECTOR3_ARRAY",         ## 36 0x24
-    TYPE_PACKED_COLOR_ARRAY: "TYPE_PACKED_COLOR_ARRAY",
-    TYPE_MAX: "TYPE_MAX"                                            ## 38 0x26
+    TYPE_DICTIONARY: "TYPE_DICTIONARY",
+    TYPE_ARRAY: "TYPE_ARRAY",
+    TYPE_RAW_ARRAY: "TYPE_RAW_ARRAY",                               ## 20 0x14
+    TYPE_INT_ARRAY: "TYPE_INT_ARRAY",
+    TYPE_REAL_ARRAY: "TYPE_REAL_ARRAY",
+    TYPE_STRING_ARRAY: "TYPE_STRING_ARRAY",
+    TYPE_VECTOR2_ARRAY: "TYPE_VECTOR2_ARRAY",
+    TYPE_VECTOR3_ARRAY: "TYPE_VECTOR3_ARRAY",
+    TYPE_COLOR_ARRAY: "TYPE_COLOR_ARRAY",
+    TYPE_MAX: "TYPE_MAX"                                            ## 27 0x1b
 }
 
 
@@ -78,10 +67,10 @@ func read_file( file_path: String ):
 
 func test_data( input_data ):
     var curr_dir = ProjectSettings.globalize_path("res://")
-    var handler_path = curr_dir + "./lib/handle_data.sh"
+    var handler_path = curr_dir + "./lib/v3/handle_data.sh"
 
-    var tmp_in  = curr_dir + "./tmp/data_in.bin"
-    var tmp_out = curr_dir + "./tmp/data_out.bin"
+    var tmp_in  = curr_dir + "./tmp/data_in_v3.bin"
+    var tmp_out = curr_dir + "./tmp/data_out_v3.bin"
 
     var data_out = File.new()
     data_out.open( tmp_in, File.WRITE )
@@ -89,7 +78,8 @@ func test_data( input_data ):
     data_out.close()
 
     var output = []
-    var exit_code = OS.execute( handler_path, [ "-if=" + tmp_in, "-of=" + tmp_out ], output, true, true )
+    var args = PoolStringArray( [ "-if=" + tmp_in, "-of=" + tmp_out ] )
+    var exit_code = OS.execute( handler_path, args, true, output, true )
 
     if exit_code != OK:
         var words = output[0].replace( "\n", "\n")
@@ -147,49 +137,25 @@ func execute():
     data = Vector2( 0.5, 1.0 )
     test_data( data )
     
-    ## vector2i
-    data = Vector2i( 5, 1 )
-    test_data( data )
-    
     ## Rect2
     data = Rect2( 0.5, 1.0, 3.0, 2.5 )
     test_data( data )
-    
-    ## Rect2i
-    data = Rect2i( 0, 1, 3, 2 )
-    test_data( data )
 
-    ## vector2i
-    data = Vector2i( 5, 1 )
-    test_data( data )
-    
     ## vector3
     data = Vector3( 0.5, 0.0, 1.0 )
-    test_data( data )
-    
-    ## Vector3i
-    data = Vector3i( 5, 0, 1 )
     test_data( data )
 
     ## Transform2D
     data = Transform2D()
     data = data.translated( Vector2( 0.5, 1.0 ) )
     test_data( data )
-    
-    ## vector4
-    data = Vector4( 0.5, 0.0, 1.0, 2.2 )
-    test_data( data )
-    
-    ## Vector4i
-    data = Vector4i( 5, 0, 1, 2 )
-    test_data( data )
 
     ## Plane
     data = Plane( 1.1, 2.2, 3.3, 4.4 )
     test_data( data )
 
-    ## Quaternion
-    data = Quaternion( 1.1, 2.2, 3.3, 4.4 )
+    ## Quat
+    data = Quat( 1.1, 2.2, 3.3, 4.4 )
     test_data( data )
 
     ## AABB
@@ -200,13 +166,8 @@ func execute():
     data = Basis( Vector3(1.0, 0.0, 0.0), 0.5 )
     test_data( data )
     
-    ## Transform3D
-    data = Transform3D()
-    data = data.translated( Vector3( 0.5, 0.0, 1.0 ) )
-    test_data( data )
-    
-    ## Projection
-    data = Projection()
+    ## Transform
+    data = Transform()
     test_data( data )
     
     ## Color
@@ -219,16 +180,6 @@ func execute():
     
     data = [ "REG_RESP", "a" ]
     test_data( data )
-    
-    ## StringName
-    data = StringName( "333" )
-    test_data( data )
-    
-    data = StringName( "4444" )
-    test_data( data )
-    
-    data = StringName( "55555" )
-    test_data( data )
 
     ### NodePath new format
     #data = NodePath( "aaa/bbb" )
@@ -238,44 +189,36 @@ func execute():
     data = RID()
     test_data( data )
 
-    ## PackedByteArray
-    data = PackedByteArray( [1, 2, 3] )
+    ## PoolByteArray
+    data = PoolByteArray( [1, 2, 3] )
     test_data( data )
     
-    ## PackedInt32Array
-    data = PackedInt32Array( [1, 2, 3] )
+    ## PoolIntArray
+    data = PoolIntArray( [1, 2, 3] )
     test_data( data )
     
-    ## PackedInt64Array
-    data = PackedInt64Array( [31, 32, 33] )
+    ## PoolRealArray
+    data = PoolRealArray( [1.1, 2.2, 3.3] )
     test_data( data )
     
-    ## PackedFloat32Array
-    data = PackedInt32Array( [1.1, 2.2, 3.3] )
-    test_data( data )
-    
-    ## PackedFloat64Array
-    data = PackedFloat64Array( [31.3, 32.4, 33.5] )
-    test_data( data )
-    
-    ## PackedStringArray
-    data = PackedStringArray( ["333", "4444", "55555"] )
+    ## PoolStringArray
+    data = PoolStringArray( ["333", "4444", "55555"] )
     test_data( data )
 
-    ## PackedVector2Array
-    data = PackedVector2Array()
+    ## PoolVector2Array
+    data = PoolVector2Array()
     data.append( Vector2( 0.5, 0.0 ) )
     data.append( Vector2( 0.6, 0.1 ) )
     test_data( data )
 
-    ## PackedVector3Array
-    data = PackedVector3Array()
+    ## PoolVector3Array
+    data = PoolVector3Array()
     data.append( Vector3( 0.5, 0.0, 1.0 ) )
     data.append( Vector3( 0.6, 0.1, 1.1 ) )
     test_data( data )
     
     ## packed Color array
-    data = PackedColorArray()
+    data = PoolColorArray()
     data.append( Color( 0.5, 0.0, 1.0 ) )
     data.append( Color( 0.6, 0.1, 1.1 ) )
     test_data( data )
