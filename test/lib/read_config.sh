@@ -18,7 +18,9 @@ cat > $CONFIG_PATH <<- EOM
 
 
 ## path Godot engine executable
-ENGINE_PATH=
+ENGINE_V3_PATH=
+
+ENGINE_V4_PATH=
 
 EOM
 fi
@@ -28,16 +30,30 @@ fi
 source $CONFIG_PATH
 
 
-read_engine_path() {
+read_engine_v3_path() {
     ## handle config variable
-    if [[ ! "$ENGINE_PATH" =~ ^/ ]]; then
+    if [[ ! "$ENGINE_V3_PATH" =~ ^/ ]]; then
         ## relative path -- add script path in front of
-        ENGINE_PATH="$SCRIPT_DIR/$ENGINE_PATH"
+        ENGINE_V3_PATH="$SCRIPT_DIR/$ENGINE_V3_PATH"
     fi
-    ENGINE_PATH=$(readlink -m "$ENGINE_PATH")
+    ENGINE_V3_PATH=$(readlink -m "$ENGINE_V3_PATH")
     
-    if [ -z "$ENGINE_PATH" ] || [ ! -f $ENGINE_PATH ]; then
-        echo "Given executable [$ENGINE_PATH] not exists. Verify $CONFIG_PATH"
+    if [ -z "$ENGINE_V3_PATH" ] || [ ! -f $ENGINE_V3_PATH ]; then
+        echo "Given executable [$ENGINE_V3_PATH] not exists. Verify $CONFIG_PATH"
+        exit 1
+    fi
+}
+
+read_engine_v4_path() {
+    ## handle config variable
+    if [[ ! "$ENGINE_V4_PATH" =~ ^/ ]]; then
+        ## relative path -- add script path in front of
+        ENGINE_V4_PATH="$SCRIPT_DIR/$ENGINE_V4_PATH"
+    fi
+    ENGINE_V4_PATH=$(readlink -m "$ENGINE_V4_PATH")
+    
+    if [ -z "$ENGINE_V4_PATH" ] || [ ! -f $ENGINE_V4_PATH ]; then
+        echo "Given executable [$ENGINE_V4_PATH] not exists. Verify $CONFIG_PATH"
         exit 1
     fi
 }
