@@ -24,9 +24,14 @@
 import logging
 from enum import IntEnum, unique
 
-from typing import List, Tuple
-
 from . import commontypes as ct
+
+from .commontypes import Vector2, Vector2i, Rect2, Rect2i,\
+    Vector3, Vector3i, Transform2D, Vector4, Vector4i, Plane, Quaternion, AABB,\
+    Basis, Transform3D, Projection, Color, StringName, NodePath, RID
+from .commontypes import ByteArray,\
+    Int32Array, Int64Array, Float32Array, Float64Array, StringArray,\
+    Vector2Array, Vector3Array, ColorArray
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,42 +106,42 @@ class GodotType( IntEnum ):
 ##     implicit: ( Godot_Type_Id, Python_Type )
 ##                where <deserialize_function> is "deserialize_Python_Type"
 ##                where <serialize_function>   is "serialize_Python_Type"
-CONFIG_LIST: List[ Tuple ] = [
+CONFIG_LIST = [
     ( GodotType.NULL.value,                 type(None),       ct.deserialize_none,         ct.serialize_none ),
     ( GodotType.BOOL.value,                 bool,             ct.deserialize_bool,         ct.serialize_bool ),
     ( GodotType.INT.value,                  int,              ct.deserialize_int,          ct.serialize_int ),
     ( GodotType.FLOAT.value,                float,            ct.deserialize_float,        ct.serialize_float ),
     ( GodotType.STRING.value,               str,              ct.deserialize_string,       ct.serialize_string ),
-    ( GodotType.VECTOR2.value,              ct.Vector2 ),
-    ( GodotType.VECTOR2I.value,             ct.Vector2i ),
-    ( GodotType.RECT2.value,                ct.Rect2 ),
-    ( GodotType.RECT2I.value,               ct.Rect2i ),
-    ( GodotType.VECTOR3.value,              ct.Vector3 ),
-    ( GodotType.VECTOR3I.value,             ct.Vector3i ),
-    ( GodotType.TRANSFORM2D.value,          ct.Transform2D ),
-    ( GodotType.VECTOR4.value,              ct.Vector4 ),
-    ( GodotType.VECTOR4I.value,             ct.Vector4i ),
-    ( GodotType.PLANE.value,                ct.Plane ),
-    ( GodotType.QUATERNION.value,           ct.Quaternion ),
-    ( GodotType.AABB.value,                 ct.AABB ),
-    ( GodotType.BASIS.value,                ct.Basis ),
-    ( GodotType.TRANSFORM3D.value,          ct.Transform3D ),
-    ( GodotType.PROJECTION.value,           ct.Projection ),
-    ( GodotType.COLOR.value,                ct.Color ),
-    ( GodotType.STRINGNAME.value,           ct.StringName ),
-    ( GodotType.NODEPATH.value,             ct.NodePath ),
-    ( GodotType.RID.value,                  ct.RID ),
+    ( GodotType.VECTOR2.value,              Vector2 ),
+    ( GodotType.VECTOR2I.value,             Vector2i ),
+    ( GodotType.RECT2.value,                Rect2 ),
+    ( GodotType.RECT2I.value,               Rect2i ),
+    ( GodotType.VECTOR3.value,              Vector3 ),
+    ( GodotType.VECTOR3I.value,             Vector3i ),
+    ( GodotType.TRANSFORM2D.value,          Transform2D ),
+    ( GodotType.VECTOR4.value,              Vector4 ),
+    ( GodotType.VECTOR4I.value,             Vector4i ),
+    ( GodotType.PLANE.value,                Plane ),
+    ( GodotType.QUATERNION.value,           Quaternion ),
+    ( GodotType.AABB.value,                 AABB ),
+    ( GodotType.BASIS.value,                Basis ),
+    ( GodotType.TRANSFORM3D.value,          Transform3D ),
+    ( GodotType.PROJECTION.value,           Projection ),
+    ( GodotType.COLOR.value,                Color ),
+    ( GodotType.STRINGNAME.value,           StringName ),
+    ( GodotType.NODEPATH.value,             NodePath ),
+    ( GodotType.RID.value,                  RID ),
     ( GodotType.DICT.value,                 dict,             ct.deserialize_dict,         ct.serialize_dict ),
     ( GodotType.LIST.value,                 list,             ct.deserialize_list,         ct.serialize_list ),
-    ( GodotType.PACKEDBYTEARRAY.value,      ct.ByteArray ),
-    ( GodotType.PACKEDINT32ARRAY.value,     ct.Int32Array ),
-    ( GodotType.PACKEDINT64ARRAY.value,     ct.Int64Array ),
-    ( GodotType.PACKEDFLOAT32ARRAY.value,   ct.Float32Array ),
-    ( GodotType.PACKEDFLOAT64ARRAY.value,   ct.Float64Array ),
-    ( GodotType.PACKEDSTRINGARRAY.value,    ct.StringArray ),
-    ( GodotType.PACKEDVECTOR2ARRAY.value,   ct.Vector2Array ),
-    ( GodotType.PACKEDVECTOR3ARRAY.value,   ct.Vector3Array ),
-    ( GodotType.PACKEDCOLORARRAY.value,     ct.ColorArray )
+    ( GodotType.PACKEDBYTEARRAY.value,      ByteArray ),
+    ( GodotType.PACKEDINT32ARRAY.value,     Int32Array ),
+    ( GodotType.PACKEDINT64ARRAY.value,     Int64Array ),
+    ( GodotType.PACKEDFLOAT32ARRAY.value,   Float32Array ),
+    ( GodotType.PACKEDFLOAT64ARRAY.value,   Float64Array ),
+    ( GodotType.PACKEDSTRINGARRAY.value,    StringArray ),
+    ( GodotType.PACKEDVECTOR2ARRAY.value,   Vector2Array ),
+    ( GodotType.PACKEDVECTOR3ARRAY.value,   Vector3Array ),
+    ( GodotType.PACKEDCOLORARRAY.value,     ColorArray )
 
     # ( GodotType.BOOL.value,  bool,        deserialize_uninplemented,  serialize_uninplemented ),
 ]
