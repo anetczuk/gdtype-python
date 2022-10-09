@@ -71,7 +71,7 @@ class DeserializationStream:
         return ret_list
 
     def _deserialize(self):
-        expected_size = self.buffer.popInt()
+        expected_size = self.buffer.popInt32()
         message_size  = self.buffer.size()
         if message_size < expected_size:
             _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", self.buffer )

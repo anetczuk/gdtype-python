@@ -119,6 +119,14 @@ func test_data( input_data ):
 func execute():
     var data = null
     
+    ## null
+    data = null
+    test_data( data )
+    
+    ## bool
+    data = true
+    test_data( data )
+    
     ## positive integer
     data = 321
     test_data( data )
@@ -126,7 +134,85 @@ func execute():
     ## negative integer
     data = -321
     test_data( data )
+
+    ## float
+    data = float( 123.321 )
+    test_data( data )
+
+    ## string
+    data = "qwer1"
+    test_data( data )
     
+    ## vector2
+    data = Vector2( 0.5, 1.0 )
+    test_data( data )
+    
+    ## vector2i
+    data = Vector2i( 5, 1 )
+    test_data( data )
+    
+    ## Rect2
+    data = Rect2( 0.5, 1.0, 3.0, 2.5 )
+    test_data( data )
+    
+    ## Rect2i
+    data = Rect2i( 0, 1, 3, 2 )
+    test_data( data )
+
+    ## vector2i
+    data = Vector2i( 5, 1 )
+    test_data( data )
+    
+    ## vector3
+    data = Vector3( 0.5, 0.0, 1.0 )
+    test_data( data )
+    
+    ## Vector3i
+    data = Vector3i( 5, 0, 1 )
+    test_data( data )
+
+    ## Transform2D
+    data = Transform2D()
+    data = data.translated( Vector2( 0.5, 1.0 ) )
+    test_data( data )
+    
+    ## vector4
+    data = Vector4( 0.5, 0.0, 1.0, 2.2 )
+    test_data( data )
+    
+    ## Vector4i
+    data = Vector4i( 5, 0, 1, 2 )
+    test_data( data )
+
+    ## Plane
+    data = Plane( 1.1, 2.2, 3.3, 4.4 )
+    test_data( data )
+
+    ## Quaternion
+    data = Quaternion( 1.1, 2.2, 3.3, 4.4 )
+    test_data( data )
+
+    ## AABB
+    data = AABB( Vector3(1.1, 2.2, 3.3), Vector3(4.1, 5.2, 6.3) )
+    test_data( data )
+
+    ## Basis
+    data = Basis( Vector3(1.0, 0.0, 0.0), 0.5 )
+    test_data( data )
+    
+    ## Transform3D
+    data = Transform3D()
+    data = data.translated( Vector3( 0.5, 0.0, 1.0 ) )
+    test_data( data )
+    
+    ## Projection
+    data = Projection()
+    test_data( data )
+    
+    ## Color
+    data = Color( 0.5, 0.0, 1.0 )
+    test_data( data )
+
     ## list with string
     data = [ "aaaa2" ]
     test_data( data )
@@ -134,27 +220,64 @@ func execute():
     data = [ "REG_RESP", "a" ]
     test_data( data )
     
-    ## color
-    data = Color( 0.5, 0.0, 1.0 )
+    ## StringName
+    data = StringName( "333" )
     test_data( data )
     
-    ## vector3
-    data = Vector3( 0.5, 0.0, 1.0 )
+    data = StringName( "4444" )
     test_data( data )
     
-    ## Transform
-    data = Transform3D()
-    data = data.translated( Vector3( 0.5, 0.0, 1.0 ) )
+    data = StringName( "55555" )
+    test_data( data )
+
+    ### NodePath new format
+    #data = NodePath( "aaa/bbb" )
+    #test_data( data )
+
+    ## RID
+    data = RID()
+    test_data( data )
+
+    ## PackedByteArray
+    data = PackedByteArray( [1, 2, 3] )
     test_data( data )
     
-    ## string name
-    data = StringName( "asdfg" )
+    ## PackedInt32Array
+    data = PackedInt32Array( [1, 2, 3] )
     test_data( data )
     
-    ## packed vector3 array
+    ## PackedInt64Array
+    data = PackedInt64Array( [31, 32, 33] )
+    test_data( data )
+    
+    ## PackedFloat32Array
+    data = PackedInt32Array( [1.1, 2.2, 3.3] )
+    test_data( data )
+    
+    ## PackedFloat64Array
+    data = PackedFloat64Array( [31.3, 32.4, 33.5] )
+    test_data( data )
+    
+    ## PackedStringArray
+    data = PackedStringArray( ["333", "4444", "55555"] )
+    test_data( data )
+
+    ## PackedVector2Array
+    data = PackedVector2Array()
+    data.append( Vector2( 0.5, 0.0 ) )
+    data.append( Vector2( 0.6, 0.1 ) )
+    test_data( data )
+
+    ## PackedVector3Array
     data = PackedVector3Array()
     data.append( Vector3( 0.5, 0.0, 1.0 ) )
     data.append( Vector3( 0.6, 0.1, 1.1 ) )
+    test_data( data )
+    
+    ## packed Color array
+    data = PackedColorArray()
+    data.append( Color( 0.5, 0.0, 1.0 ) )
+    data.append( Color( 0.6, 0.1, 1.1 ) )
     test_data( data )
     
     if valid:

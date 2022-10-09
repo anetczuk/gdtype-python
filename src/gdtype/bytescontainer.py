@@ -52,9 +52,27 @@ class BytesContainer:
         return ret_data
 
     ## pop int from front
-    def popInt(self):
+    def popInt32(self):
         raw = self.pop(4)
         return int.from_bytes( raw, byteorder='little' )
+
+    def popInt32Items(self, items_number):
+        retList = []
+        for _ in range(0, items_number):
+            value = self.popInt32()
+            retList.append( value )
+        return retList
+
+    def popInt64(self):
+        raw = self.pop(8)
+        return int.from_bytes( raw, byteorder='little' )
+
+    def popInt64Items(self, items_number):
+        retList = []
+        for _ in range(0, items_number):
+            value = self.popInt64()
+            retList.append( value )
+        return retList
 
     def popFloat32(self):
         raw = self.pop(4)
@@ -62,9 +80,9 @@ class BytesContainer:
         proper_data = proper_data[0]
         return proper_data
 
-    def popFloat32Items(self, items):
+    def popFloat32Items(self, items_number):
         retList = []
-        for _ in range(0, items):
+        for _ in range(0, items_number):
             value = self.popFloat32()
             retList.append( value )
         return retList
@@ -74,14 +92,35 @@ class BytesContainer:
         proper_data = struct.unpack( "<d", raw )
         proper_data = proper_data[0]
         return proper_data
+        return proper_data
 
-    def popString(self, string_len: int):
+    def popFloat64Items(self, items_number):
+        retList = []
+        for _ in range(0, items_number):
+            value = self.popFloat64()
+            retList.append( value )
+        return retList
+
+    def popStringRaw(self, string_len: int):
         data_string = self.pop( string_len )
         return data_string.decode("utf-8")
 
+    def popString(self, string_len: int = -1 ):
+        if string_len < 0:
+            string_len = self.popInt32()
+        if string_len < 1:
+            return ""
+        proper_data = self. popStringRaw( string_len )
+        remaining = string_len % 4
+        if remaining > 0:
+            padding = 4 - remaining
+            ## pop remaining padding (zero bytes)
+            self.pop( padding )
+        return proper_data
+
     ## pop from front
     def popFlagsType(self):
-        raw = self.popInt()
+        raw = self.popInt32()
         data_type  = raw & 0xFF
         data_flags = (raw >> 16) & 0xFF
         return ( data_flags, data_type )
@@ -100,9 +139,22 @@ class BytesContainer:
         self.data = self.data + zeros
 
     ## push back value
-    def pushInt( self, value: int ):
+    def pushInt32( self, value: int ):
         raw = value.to_bytes( 4,  byteorder='little' )
         self.push( raw )
+
+    def pushIntItems(self, value_array: List[int] ):
+        for item in value_array:
+            self.pushInt32( item )
+
+    ## push back value
+    def pushInt64( self, value: int ):
+        raw = value.to_bytes( 8,  byteorder='little' )
+        self.push( raw )
+
+    def pushInt64Items(self, value_array: List[int] ):
+        for item in value_array:
+            self.pushInt64( item )
 
     def pushFloat32(self, value: float):
         raw = struct.pack( "<f", value )
@@ -116,14 +168,27 @@ class BytesContainer:
         raw = struct.pack( "<d", value )
         self.push( raw )
 
-    def pushString(self, value: str):
+    def pushFloat64Items(self, value_array: List[float] ):
+        for item in value_array:
+            self.pushFloat64( item )
+
+    def pushStringRaw(self, value: str):
         raw = value.encode("utf-8")
         self.push( raw )
+
+    def pushString(self, value: str):
+        str_len = len( value )
+        self.pushInt32( str_len )
+        self.pushStringRaw( value )
+        remaining = str_len % 4
+        if remaining > 0:
+            padding = 4 - remaining
+            self.pushZeros( padding )
 
     ## push back value
     def pushFlagsType( self, flags: int, data_type: int ):
         value = ((flags & 0xFF) << 16) | ( data_type & 0xFF )
-        self.pushInt( value )
+        self.pushInt32( value )
 
     ## =====================================================
 

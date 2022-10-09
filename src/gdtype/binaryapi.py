@@ -41,7 +41,7 @@ def deserialize( message: bytes ):
         raise ValueError( f"invalid packet -- too short: {mess_len} < 4 for {message!r}" )
 
     data = BytesContainer( message )
-    expected_size = data.popInt()
+    expected_size = data.popInt32()
     message_size  = data.size()
     if message_size != expected_size:
         _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", data )
@@ -58,7 +58,7 @@ def serialize( value ) -> bytes:
         ## failed to serialize data
         raise ValueError( "failed to serialize: empty output data" )
     message = BytesContainer()
-    message.pushInt( data_size )        ## set header
+    message.pushInt32( data_size )        ## set header
     message.push( data.data )
     return message.data
 
@@ -69,7 +69,7 @@ def get_message_length( data: bytes ):
     if container.size() < 4:
         _LOGGER.error( "message is too short: %s", data )
         return None
-    return container.popInt()
+    return container.popInt32()
 
 
 ## return:
@@ -186,14 +186,14 @@ def deserialize_bool( _: int, data: BytesContainer ):
     if data_len < 4:
         _LOGGER.error( "invalid packet -- too short: %s", data )
         raise ValueError( f"invalid packet -- too short: {data}" )
-    data_value = data.popInt()
+    data_value = data.popInt32()
     proper_data = data_value > 0
     return proper_data
 
 
 def serialize_bool( gd_type_id: int, value, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
-    data.pushInt( value )
+    data.pushInt32( value )
 
 
 ## =========================================================
@@ -204,7 +204,7 @@ def deserialize_int( _: int, data: BytesContainer ):
     data_len = data.size()
     if data_len < 4:
         raise ValueError( f"invalid packet -- too short: {data}" )
-    proper_data = data.popInt()
+    proper_data = data.popInt32()
     if proper_data & 0x80000000:
         ## got negative number
         neg_val = proper_data & 0x7FFFFFFF
@@ -221,10 +221,10 @@ def serialize_int( gd_type_id: int, value, data: BytesContainer ):
         ## got negative number
         pos_val = value & 0x7FFFFFFF
         out = 0x80000000 + pos_val
-        data.pushInt( out )
+        data.pushInt32( out )
     else:
         ## positive number
-        data.pushInt( value )
+        data.pushInt32( value )
 
 
 ## =========================================================
@@ -258,27 +258,152 @@ def deserialize_string( _: int, data: BytesContainer ):
     data_len = data.size()
     if data_len < 4:
         raise ValueError( f"invalid packet -- too short: {data}" )
-    string_len = data.popInt()
-    if string_len < 1:
-        return ""
-    proper_data = data.popString( string_len )
-    remaining = string_len % 4
-    if remaining > 0:
-        padding = 4 - remaining
-        ## pop remaining padding (zero bytes)
-        data.pop( padding )
-    return proper_data
+    return data.popString()
 
 
 def serialize_string( gd_type_id: int, value, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     str_len = len( value )
-    data.pushInt( str_len )
-    data.pushString( value )
+    data.pushInt32( str_len )
+    data.pushStringRaw( value )
     remaining = str_len % 4
     if remaining > 0:
         padding = 4 - remaining
         data.pushZeros( padding )
+
+
+## =========================================================
+
+
+@dataclass
+class Vector2():
+    x: float = 0.0
+    y: float = 0.0
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 2:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.x = data_array[0]
+        self.y = data_array[1]
+
+    def getDataArray(self):
+        return [ self.x, self.y ]
+
+
+def deserialize_vector2( _: int, data: BytesContainer ) -> Vector2:
+    data = data.popFloat32Items(2)
+    return Vector2( data )
+
+
+def serialize_vector2( gd_type_id: int, value: Vector2, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Vector2i():
+    x: int = 0
+    y: int = 0
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 2:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.x = data_array[0]
+        self.y = data_array[1]
+
+    def getDataArray(self):
+        return [ self.x, self.y ]
+
+
+def deserialize_vector2i( _: int, data: BytesContainer ) -> Vector2i:
+    data = data.popInt32Items(2)
+    return Vector2i( data )
+
+
+def serialize_vector2i( gd_type_id: int, value: Vector2i, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushIntItems( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Rect2():
+    x_coord: float = 0.0
+    y_coord: float = 0.0
+    x_size: float  = 0.0
+    y_size: float  = 0.0
+    
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 4:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.x_coord = data_array[0]
+        self.y_coord = data_array[1]
+        self.x_size  = data_array[2]
+        self.y_size  = data_array[3]
+
+    def getDataArray(self):
+        return [ self.x_coord, self.y_coord, self.x_size, self.y_size ]
+
+
+def deserialize_Rect2( _: int, data: BytesContainer ) -> Rect2:
+    data = data.popFloat32Items(4)
+    return Rect2( data )
+
+
+def serialize_Rect2( gd_type_id: int, value: Rect2, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Rect2i():
+    x_coord: int = 0
+    y_coord: int = 0
+    x_size: int  = 0
+    y_size: int  = 0
+    
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 4:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.x_coord = data_array[0]
+        self.y_coord = data_array[1]
+        self.x_size  = data_array[2]
+        self.y_size  = data_array[3]
+
+    def getDataArray(self):
+        return [ self.x_coord, self.y_coord, self.x_size, self.y_size ]
+
+
+def deserialize_Rect2i( _: int, data: BytesContainer ) -> Rect2i:
+    data = data.popInt32Items(4)
+    return Rect2i( data )
+
+
+def serialize_Rect2i( gd_type_id: int, value: Rect2i, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushIntItems( data_array )
 
 
 ## =========================================================
@@ -305,14 +430,294 @@ class Vector3():
 
 # def deserialize_vector3( data_flags: int, data: BytesContainer ):
 def deserialize_vector3( _: int, data: BytesContainer ) -> Vector3:
-    ## XYZ
     data = data.popFloat32Items(3)
     return Vector3( data )
 
 
 def serialize_vector3( gd_type_id: int, value: Vector3, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
-    ## XYZ
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Vector3i():
+    x: int = 0
+    y: int = 0
+    z: int = 0
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 3:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.x = data_array[0]
+        self.y = data_array[1]
+        self.z = data_array[2]
+
+    def getDataArray(self):
+        return [ self.x, self.y, self.z ]
+
+
+def deserialize_vector3i( _: int, data: BytesContainer ) -> Vector3i:
+    data = data.popInt32Items(3)
+    return Vector3i( data )
+
+
+def serialize_vector3i( gd_type_id: int, value: Vector3i, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushIntItems( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Transform2D():
+    ## has 2 rows and 3 columns
+    values: list
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            self.values: list = [ 0.0 ] * 6
+            return
+        if len(data_array) != 6:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.values = list( data_array )    ## copy
+
+    def __getitem__( self, key ):
+        return self.values[ key ]
+
+    def get( self, row, col ):
+        return self.values[ col + row * 2 ]
+
+    def getDataArray(self):
+        return list( self.values )
+
+
+def deserialize_Transform2D( _: int, data: BytesContainer ) -> Transform2D:
+    data = data.popFloat32Items(6)
+    return Transform2D( data )
+
+
+def serialize_Transform2D( gd_type_id: int, value: Transform2D, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Vector4():
+    w: float = 0.0
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 4:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.w = data_array[0]
+        self.x = data_array[1]
+        self.y = data_array[2]
+        self.z = data_array[3]
+
+    def getDataArray(self):
+        return [ self.w, self.x, self.y, self.z ]
+
+
+# def deserialize_vector3( data_flags: int, data: BytesContainer ):
+def deserialize_Vector4( _: int, data: BytesContainer ) -> Vector4:
+    data = data.popFloat32Items(4)
+    return Vector4( data )
+
+
+def serialize_Vector4( gd_type_id: int, value: Vector4, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Vector4i():
+    w: int = 0
+    x: int = 0
+    y: int = 0
+    z: int = 0
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 4:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.w = data_array[0]
+        self.x = data_array[1]
+        self.y = data_array[2]
+        self.z = data_array[3]
+
+    def getDataArray(self):
+        return [ self.w, self.x, self.y, self.z ]
+
+
+def deserialize_Vector4i( _: int, data: BytesContainer ) -> Vector4i:
+    data = data.popInt32Items(4)
+    return Vector4i( data )
+
+
+def serialize_Vector4i( gd_type_id: int, value: Vector3i, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushIntItems( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Plane():
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    d: float = 0.0
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 4:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.x = data_array[0]
+        self.y = data_array[1]
+        self.z = data_array[2]
+        self.d = data_array[3]
+
+    def getDataArray(self):
+        return [ self.x, self.y, self.z, self.d ]
+
+
+def deserialize_Plane( _: int, data: BytesContainer ) -> Plane:
+    data = data.popFloat32Items(4)
+    return Plane( data )
+
+
+def serialize_Plane( gd_type_id: int, value: Plane, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Quaternion():
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    w: float = 1.0
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 4:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.x = data_array[0]
+        self.y = data_array[1]
+        self.z = data_array[2]
+        self.w = data_array[3]
+
+    def getDataArray(self):
+        return [ self.x, self.y, self.z, self.w ]
+
+
+def deserialize_Quaternion( _: int, data: BytesContainer ) -> Quaternion:
+    data = data.popFloat32Items(4)
+    return Quaternion( data )
+
+
+def serialize_Quaternion( gd_type_id: int, value: Quaternion, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class AABB():
+    x_coord: float = 0.0
+    y_coord: float = 0.0
+    z_coord: float = 0.0
+    x_size: float  = 0.0
+    y_size: float  = 0.0
+    z_size: float  = 0.0
+    
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 6:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.x_coord = data_array[0]
+        self.y_coord = data_array[1]
+        self.z_coord = data_array[2]
+        self.x_size  = data_array[3]
+        self.y_size  = data_array[4]
+        self.z_size  = data_array[5]
+
+    def getDataArray(self):
+        return [ self.x_coord, self.y_coord, self.z_coord, self.x_size, self.y_size, self.z_size ]
+
+
+def deserialize_AABB( _: int, data: BytesContainer ) -> AABB:
+    data = data.popFloat32Items(6)
+    return AABB( data )
+
+
+def serialize_AABB( gd_type_id: int, value: AABB, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Basis():
+    ## has 3 rows and 3 columns
+    values: list
+    
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        if len(data_array) != 9:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.values = list( data_array )    ## copy
+
+    def getDataArray(self):
+        return list( self.values )
+
+
+def deserialize_Basis( _: int, data: BytesContainer ) -> Basis:
+    data = data.popFloat32Items(9)
+    return Basis( data )
+
+
+def serialize_Basis( gd_type_id: int, value: Basis, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
     data.pushFloat32Items( data_array )
 
@@ -344,12 +749,49 @@ class Transform3D():
 
 
 # def deserialize_vector3( data_flags: int, data: BytesContainer ):
-def deserialize_transform3d( _: int, data: BytesContainer ) -> Transform3D:
+def deserialize_Transform3D( _: int, data: BytesContainer ) -> Transform3D:
     data = data.popFloat32Items(12)
     return Transform3D( data )
 
 
-def serialize_transform3d( gd_type_id: int, value: Transform3D, data: BytesContainer ):
+def serialize_Transform3D( gd_type_id: int, value: Transform3D, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data_array = value.getDataArray()
+    data.pushFloat32Items( data_array )
+
+
+## =========================================================
+
+
+@dataclass
+class Projection():
+    ## has 4 rows and 4 columns
+    values: list
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            self.values: list = [ 0.0 ] * 16
+            return
+        if len(data_array) != 16:
+            raise ValueError( f"invalid array size: {data_array}" )
+        self.values = list( data_array )    ## copy
+
+    def __getitem__( self, key ):
+        return self.values[ key ]
+
+    def get( self, row, col ):
+        return self.values[ col + row * 4 ]
+
+    def getDataArray(self):
+        return list( self.values )
+
+
+def deserialize_Projection( _: int, data: BytesContainer ) -> Projection:
+    data = data.popFloat32Items(16)
+    return Projection( data )
+
+
+def serialize_Projection( gd_type_id: int, value: Projection, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
     data.pushFloat32Items( data_array )
@@ -379,14 +821,14 @@ class Color():
         return [ self.red, self.green, self.blue, self.alpha ]
 
 
-# def deserialize_color( data_flags: int, data: BytesContainer ):
-def deserialize_color( _: int, data: BytesContainer ) -> Color:
+# def deserialize_Color( data_flags: int, data: BytesContainer ):
+def deserialize_Color( _: int, data: BytesContainer ) -> Color:
     ## RGBA
     data = data.popFloat32Items(4)
     return Color( data )
 
 
-def serialize_color( gd_type_id: int, value: Color, data: BytesContainer ):
+def serialize_Color( gd_type_id: int, value: Color, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     ## RGBA
     data_array = value.getDataArray()
@@ -401,28 +843,72 @@ class StringName():
     value: str = ""
 
 
-# def deserialize_color( data_flags: int, data: BytesContainer ):
-def deserialize_stringname( _: int, data: BytesContainer ) -> StringName:
+def deserialize_StringName( _: int, data: BytesContainer ) -> StringName:
     data_len = data.size()
     if data_len < 4:
         raise ValueError( f"invalid packet -- too short: {data}" )
-    string_len = data.popInt()
-    if string_len < 1:
-        return StringName()
-    proper_data = data.popString( string_len )
+    proper_data = data.popString()
     return StringName( proper_data )
 
 
-def serialize_stringname( gd_type_id: int, value: StringName, data: BytesContainer ):
+def serialize_StringName( gd_type_id: int, value: StringName, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     raw_value = value.value
-    str_len = len( raw_value )
-    data.pushInt( str_len )
     data.pushString( raw_value )
-    remaining = str_len % 4
-    padding = 4 - remaining
-    if padding < 4:
-        data.pushZeros( padding )
+
+
+## =========================================================
+
+
+@dataclass
+class NodePath():
+    value: str = ""
+
+
+def deserialize_NodePath( _: int, data: BytesContainer ) -> NodePath:
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( f"invalid packet -- too short: {data}" )
+    data_header  = data.popInt32()
+    header_value = data_header & 0x7FFFFFFF
+    if data_header & 0x80000000 == 0:
+        ## old format
+        proper_data = data.popString( header_value )
+        return NodePath( proper_data )
+    ## new format
+    raise ValueError( f"NodePath new format not supported: {data}" )
+
+#     ## name_count = header_value
+#     sub_name_count = data.popInt32()
+#     is_absolute    = data.popInt32() & 1 != 0
+#     return NodePath( proper_data )
+
+
+def serialize_NodePath( gd_type_id: int, value: NodePath, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    raw_value = value.value
+    data.pushString( raw_value )
+
+
+## =========================================================
+
+
+@dataclass
+class RID():
+    id: int = 0
+
+
+def deserialize_RID( _: int, data: BytesContainer ) -> RID:
+    data_len = data.size()
+    if data_len < 8:
+        raise ValueError( f"invalid packet -- too short: {data}" )
+    rid_id = data.popInt64()
+    return RID(rid_id)
+
+
+def serialize_RID( gd_type_id: int, value: RID, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    data.pushInt64( value.id )
 
 
 ## =========================================================
@@ -433,7 +919,7 @@ def deserialize_dict( _: int, data: BytesContainer ):
     data_len = data.size()
     if data_len < 4:
         raise ValueError( f"invalid packet -- too short: {data}" )
-    data_header = data.popInt()
+    data_header = data.popInt32()
     list_size   = data_header & 0x7FFFFFFF
 #         shared_flag = data_header & 0x80000000
     if list_size < 1:
@@ -453,7 +939,7 @@ def serialize_dict( gd_type_id: int, value, data: BytesContainer ):
 #             shared_flag = 0 & 0x80000000
 #             data_header = shared_flag & list_size & 0x7FFFFFFF
     data_header = dict_size & 0x7FFFFFFF
-    data.pushInt( data_header )
+    data.pushInt32( data_header )
     for key in value:
         serialize_type( key, data )
         sub_value = value[ key ]
@@ -467,7 +953,7 @@ def deserialize_list( _: int, data: BytesContainer ):
     data_len = data.size()
     if data_len < 4:
         raise ValueError( "invalid packet -- too short: {data}" )
-    data_header = data.popInt()
+    data_header = data.popInt32()
     list_size   = data_header & 0x7FFFFFFF
 #         shared_flag = data_header & 0x80000000
     if list_size < 1:
@@ -486,7 +972,7 @@ def serialize_list( gd_type_id: int, value, data: BytesContainer ):
 #             shared_flag = 0 & 0x80000000
 #             data_header = shared_flag & list_size & 0x7FFFFFFF
     data_header = list_size & 0x7FFFFFFF
-    data.pushInt( data_header )
+    data.pushInt32( data_header )
     for i in range(0, list_size):
         sub_value = value[ i ]
         serialize_type( sub_value, data )
@@ -496,8 +982,317 @@ def serialize_list( gd_type_id: int, value, data: BytesContainer ):
 
 
 @dataclass
+class ByteArray():
+    values: bytes = bytes()
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        self.values = data_array
+
+    def __len__(self):
+        return len( self.values )
+
+    def __getitem__( self, index ):
+        return self.values[ index ]
+
+    def append( self, value ):
+        self.values.append( value )
+
+
+def deserialize_ByteArray( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt32()
+    list_size   = data_header
+    if list_size < 1:
+        return ByteArray()
+
+    bytes_data = data.pop( list_size )
+    return ByteArray( bytes_data )
+
+
+def serialize_ByteArray( gd_type_id: int, value: ByteArray, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+    data_header = list_size
+    data.pushInt32( data_header )
+    data.push( value.values )
+
+
+## =========================================================
+
+
+@dataclass
+class Int32Array():
+    values: List[ int ] = field(default_factory=list)
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        self.values = data_array
+
+    def __len__(self):
+        return len( self.values )
+
+    def __getitem__( self, index ):
+        return self.values[ index ]
+
+    def append( self, value ):
+        self.values.append( value )
+
+
+def deserialize_Int32Array( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt32()
+    list_size   = data_header
+    if list_size < 1:
+        return Int32Array()
+    data_list = data.popInt32Items( list_size )
+    return Int32Array( data_list )
+
+
+def serialize_Int32Array( gd_type_id: int, value: Int32Array, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+    data_header = list_size
+    data.pushInt32( data_header )
+    data.pushIntItems( value.values )
+
+
+## =========================================================
+
+
+@dataclass
+class Int64Array():
+    values: List[ int ] = field(default_factory=list)
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        self.values = data_array
+
+    def __len__(self):
+        return len( self.values )
+
+    def __getitem__( self, index ):
+        return self.values[ index ]
+
+    def append( self, value ):
+        self.values.append( value )
+
+
+def deserialize_Int64Array( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt32()
+    list_size   = data_header
+    if list_size < 1:
+        return Int64Array()
+    data_list = data.popInt64Items( list_size )
+    return Int64Array( data_list )
+
+
+def serialize_Int64Array( gd_type_id: int, value: Int64Array, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+    data_header = list_size
+    data.pushInt32( data_header )
+    data.pushInt64Items( value.values )
+
+
+## =========================================================
+
+
+@dataclass
+class Float32Array():
+    values: List[ float ] = field(default_factory=list)
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        self.values = data_array
+
+    def __len__(self):
+        return len( self.values )
+
+    def __getitem__( self, index ):
+        return self.values[ index ]
+
+    def append( self, value ):
+        self.values.append( value )
+
+
+def deserialize_Float32Array( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt32()
+    list_size   = data_header
+    if list_size < 1:
+        return Float32Array()
+    data_list = data.popFloat32Items( list_size )
+    return Float32Array( data_list )
+
+
+def serialize_Float32Array( gd_type_id: int, value: Float32Array, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+    data_header = list_size
+    data.pushInt32( data_header )
+    data.pushFloat32Items( value.values )
+
+
+## =========================================================
+
+
+@dataclass
+class Float64Array():
+    values: List[ float ] = field(default_factory=list)
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            return
+        self.values = data_array
+
+    def __len__(self):
+        return len( self.values )
+
+    def __getitem__( self, index ):
+        return self.values[ index ]
+
+    def append( self, value ):
+        self.values.append( value )
+
+
+def deserialize_Float64Array( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt32()
+    list_size   = data_header
+    if list_size < 1:
+        return Float64Array()
+    data_list = data.popFloat64Items( list_size )
+    return Float64Array( data_list )
+
+
+def serialize_Float64Array( gd_type_id: int, value: Float64Array, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+    data_header = list_size
+    data.pushInt32( data_header )
+    data.pushFloat64Items( value.values )
+
+
+## =========================================================
+
+
+@dataclass
+class StringArray():
+    values: List[ str ] = field(default_factory=list)
+
+    def __init__( self, data_array=None ):
+        if data_array is None:
+            self.values = []
+            return
+        self.values = data_array
+
+    def __len__(self):
+        return len( self.values )
+
+    def __getitem__( self, index ):
+        return self.values[ index ]
+
+    def append( self, value ):
+        self.values.append( value )
+
+
+def deserialize_StringArray( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt32()
+    list_size   = data_header
+    if list_size < 1:
+        return StringArray()
+
+    proper_data = StringArray()
+    for _ in range(0, list_size):
+        val = data.popString()
+        proper_data.append( val )
+    return proper_data
+
+
+def serialize_StringArray( gd_type_id: int, value: StringArray, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+    data_header = list_size
+    data.pushInt32( data_header )
+    for i in range(0, list_size):
+        item = value[ i ]
+        data.pushString( item )
+
+
+## =========================================================
+
+
+@dataclass
+class Vector2Array():
+    items: List[ Tuple[float, float] ] = field(default_factory=list)        ## list of tuples(x, y)
+
+    def __len__(self):
+        return len( self.items )
+
+    def __getitem__( self, index ):
+        return self.items[ index ]
+
+    def append( self, xcoord, ycoord ):
+        self.items.append( (xcoord, ycoord) )
+
+
+# def deserialize_list( data_flags: int, data: BytesContainer ):
+def deserialize_Vector2Array( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt32()
+    list_size   = data_header
+    if list_size < 1:
+        return Vector2Array()
+
+    proper_data = Vector2Array()
+    for _ in range(0, list_size):
+        x_val = data.popFloat32()
+        y_val = data.popFloat32()
+        proper_data.append( x_val, y_val )
+    return proper_data
+
+
+def serialize_Vector2Array( gd_type_id: int, value: Vector2Array, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+#             shared_flag = 0 & 0x80000000
+#             data_header = shared_flag & list_size & 0x7FFFFFFF
+    data_header = list_size
+    data.pushInt32( data_header )
+    for i in range(0, list_size):
+        item = value[ i ]
+        data.pushFloat32( item[0] )
+        data.pushFloat32( item[1] )
+
+
+
+## =========================================================
+
+
+@dataclass
 class Vector3Array():
-    items: List[ Tuple[int, int, int] ] = field(default_factory=list)        ## list of tuples(x, y, z)
+    items: List[ Tuple[float, float, float] ] = field(default_factory=list)        ## list of tuples(x, y, z)
 
     def __len__(self):
         return len( self.items )
@@ -510,14 +1305,14 @@ class Vector3Array():
 
 
 # def deserialize_list( data_flags: int, data: BytesContainer ):
-def deserialize_vec3array( _: int, data: BytesContainer ):
+def deserialize_Vector3Array( _: int, data: BytesContainer ):
     data_len = data.size()
     if data_len < 4:
         raise ValueError( "invalid packet -- too short: {data}" )
-    data_header = data.popInt()
+    data_header = data.popInt32()
     list_size   = data_header
     if list_size < 1:
-        return []
+        return Vector3Array()
 
     proper_data = Vector3Array()
     for _ in range(0, list_size):
@@ -528,18 +1323,70 @@ def deserialize_vec3array( _: int, data: BytesContainer ):
     return proper_data
 
 
-def serialize_vec3array( gd_type_id: int, value, data: BytesContainer ):
+def serialize_Vector3Array( gd_type_id: int, value, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     list_size = len( value )
 #             shared_flag = 0 & 0x80000000
 #             data_header = shared_flag & list_size & 0x7FFFFFFF
     data_header = list_size
-    data.pushInt( data_header )
+    data.pushInt32( data_header )
     for i in range(0, list_size):
         item = value[ i ]
         data.pushFloat32( item[0] )
         data.pushFloat32( item[1] )
         data.pushFloat32( item[2] )
+
+
+## =========================================================
+
+
+@dataclass
+class ColorArray():
+    items: List[ Tuple[float, float, float, float] ] = field(default_factory=list)        ## list of tuples(r, g, b, a)
+
+    def __len__(self):
+        return len( self.items )
+
+    def __getitem__( self, index ):
+        return self.items[ index ]
+
+    def append( self, red_val, green_val, blue_val, alpha_val ):
+        self.items.append( (red_val, green_val, blue_val, alpha_val) )
+
+
+# def deserialize_list( data_flags: int, data: BytesContainer ):
+def deserialize_ColorArray( _: int, data: BytesContainer ):
+    data_len = data.size()
+    if data_len < 4:
+        raise ValueError( "invalid packet -- too short: {data}" )
+    data_header = data.popInt32()
+    list_size   = data_header
+    if list_size < 1:
+        return ColorArray()
+
+    proper_data = ColorArray()
+    for _ in range(0, list_size):
+        red_val   = data.popFloat32()
+        green_val = data.popFloat32()
+        blue_val  = data.popFloat32()
+        alpha_val = data.popFloat32()
+        proper_data.append( red_val, green_val, blue_val, alpha_val )
+    return proper_data
+
+
+def serialize_ColorArray( gd_type_id: int, value: ColorArray, data: BytesContainer ):
+    data.pushFlagsType( 0, gd_type_id )
+    list_size = len( value )
+#             shared_flag = 0 & 0x80000000
+#             data_header = shared_flag & list_size & 0x7FFFFFFF
+    data_header = list_size
+    data.pushInt32( data_header )
+    for i in range(0, list_size):
+        item = value[ i ]
+        data.pushFloat32( item[0] )
+        data.pushFloat32( item[1] )
+        data.pushFloat32( item[2] )
+        data.pushFloat32( item[3] )
 
 
 ## ======================================================================
@@ -552,14 +1399,39 @@ class GodotType( IntEnum ):
     INT                 = 2
     FLOAT               = 3
     STRING              = 4
+    VECTOR2             = 5
+    VECTOR2I            = 6
+    RECT2               = 7
+    RECT2I              = 8
     VECTOR3             = 9
+    VECTOR3I            = 10
+    TRANSFORM2D         = 11
+    VECTOR4             = 12
+    VECTOR4I            = 13
+    PLANE               = 14
+    QUATERNION          = 15
+    AABB                = 16
+    BASIS               = 17
     TRANSFORM3D         = 18
+    PROJECTION          = 19
     COLOR               = 20
     STRINGNAME          = 21
+    NODEPATH            = 22
+    RID                 = 23
+#     OBJECT              = 24
+#     CALLABLE            = 25
+#     SIGNAL              = 26
     DICT                = 27
     LIST                = 28
+    PACKEDBYTEARRAY     = 29
+    PACKEDINT32ARRAY    = 30
+    PACKEDINT64ARRAY    = 31
+    PACKEDFLOAT32ARRAY  = 32
+    PACKEDFLOAT64ARRAY  = 33
+    PACKEDSTRINGARRAY   = 34
+    PACKEDVECTOR2ARRAY  = 35
     PACKEDVECTOR3ARRAY  = 36
-#     PackedColorArray    = 37
+    PACKEDCOLORARRAY    = 37
 
     @classmethod
     def fromInt(cls, value):
@@ -572,19 +1444,47 @@ class GodotType( IntEnum ):
 ## types configuration for serialization and deserialization
 ## <deserialize_function> converts given Godot type in form of binary array into Python equivalent
 ## <serialize_function>   converts Python value into binary array representing Godot type
+## configuration accepts two formats"
+##     explicit: ( Godot_Type_Id, Python_Type, <deserialize_function>, <serialize_function> )
+##     implicit: ( Godot_Type_Id, Python_Type ) 
+##                where <deserialize_function> is "deserialize_Python_Type"
+##                where <serialize_function>   is "serialize_Python_Type"
 CONFIG_LIST = [
     ( GodotType.NULL.value,                 type(None),     deserialize_none,         serialize_none ),
     ( GodotType.BOOL.value,                 bool,           deserialize_bool,         serialize_bool ),
     ( GodotType.INT.value,                  int,            deserialize_int,          serialize_int ),
     ( GodotType.FLOAT.value,                float,          deserialize_float,        serialize_float ),
     ( GodotType.STRING.value,               str,            deserialize_string,       serialize_string ),
+    ( GodotType.VECTOR2.value,              Vector2,        deserialize_vector2,      serialize_vector2 ),
+    ( GodotType.VECTOR2I.value,             Vector2i,       deserialize_vector2i,     serialize_vector2i ),
+    ( GodotType.RECT2.value,                Rect2,          deserialize_Rect2,        serialize_Rect2 ),
+    ( GodotType.RECT2I.value,               Rect2i,         deserialize_Rect2i,       serialize_Rect2i ),
     ( GodotType.VECTOR3.value,              Vector3,        deserialize_vector3,      serialize_vector3 ),
-    ( GodotType.TRANSFORM3D.value,          Transform3D,    deserialize_transform3d,  serialize_transform3d ),
-    ( GodotType.COLOR.value,                Color,          deserialize_color,        serialize_color ),
-    ( GodotType.STRINGNAME.value,           StringName,     deserialize_stringname,   serialize_stringname ),
+    ( GodotType.VECTOR3I.value,             Vector3i,       deserialize_vector3i,     serialize_vector3i ),
+    ( GodotType.TRANSFORM2D.value,          Transform2D ),
+    ( GodotType.VECTOR4.value,              Vector4 ),
+    ( GodotType.VECTOR4I.value,             Vector4i ),
+    ( GodotType.PLANE.value,                Plane ),
+    ( GodotType.QUATERNION.value,           Quaternion ),
+    ( GodotType.AABB.value,                 AABB ),
+    ( GodotType.BASIS.value,                Basis ),
+    ( GodotType.TRANSFORM3D.value,          Transform3D ),
+    ( GodotType.PROJECTION.value,           Projection ),
+    ( GodotType.COLOR.value,                Color ),
+    ( GodotType.STRINGNAME.value,           StringName ),
+    ( GodotType.NODEPATH.value,             NodePath ),
+    ( GodotType.RID.value,                  RID ),
     ( GodotType.DICT.value,                 dict,           deserialize_dict,         serialize_dict ),
     ( GodotType.LIST.value,                 list,           deserialize_list,         serialize_list ),
-    ( GodotType.PACKEDVECTOR3ARRAY.value,   Vector3Array,   deserialize_vec3array,    serialize_vec3array )
+    ( GodotType.PACKEDBYTEARRAY.value,      ByteArray ),
+    ( GodotType.PACKEDINT32ARRAY.value,     Int32Array ),
+    ( GodotType.PACKEDINT64ARRAY.value,     Int64Array ),
+    ( GodotType.PACKEDFLOAT32ARRAY.value,   Float32Array ),
+    ( GodotType.PACKEDFLOAT64ARRAY.value,   Float64Array ),
+    ( GodotType.PACKEDSTRINGARRAY.value,    StringArray ),
+    ( GodotType.PACKEDVECTOR2ARRAY.value,   Vector2Array ),
+    ( GodotType.PACKEDVECTOR3ARRAY.value,   Vector3Array ),
+    ( GodotType.PACKEDCOLORARRAY.value,     ColorArray )
 
     # ( GodotType.BOOL.value,  bool,        deserialize_uninplemented,  serialize_uninplemented ),
 ]
@@ -600,17 +1500,29 @@ SERIALIZATION_MAP: Dict[ object, Tuple[int, FunctionType] ] = {}
 
 for config in CONFIG_LIST:
     ## deserialization map
-    gd_type: int = config[0]
-    if gd_type in DESERIALIZATION_MAP:
-        raise ValueError( f"invalid CONFIG_LIST: Godot type {gd_type} already defined" )
-    DESERIALIZATION_MAP[ gd_type ] = config[2]
+    config_gd_type: int = config[0]
+    config_py_type: object = config[1]
+    
+    deserialize_func: FunctionType = None
+    serialize_func: FunctionType   = None
+    if len( config ) == 4:
+        deserialize_func: FunctionType = config[2]
+        serialize_func: FunctionType   = config[3]
+    else:
+        ## find serialization/deserialization functions by name
+        py_type_name = config_py_type.__name__
+        mod_vars = vars()
+        deserialize_func = mod_vars[ "deserialize_%s" % py_type_name ]
+        serialize_func   = mod_vars[ "serialize_%s" % py_type_name ]
+    
+    if config_gd_type in DESERIALIZATION_MAP:
+        raise ValueError( f"invalid CONFIG_LIST: Godot type {config_gd_type} already defined" )
+    DESERIALIZATION_MAP[ config_gd_type ] = deserialize_func
 
     ## serialization map
-    config_py_type: object = config[1]
     if config_py_type in SERIALIZATION_MAP:
         raise ValueError( f"invalid CONFIG_LIST: Python type {config_py_type} already defined" )
-    func_ptr: FunctionType = config[3]                              # type: ignore
-    SERIALIZATION_MAP[ config_py_type ] = ( gd_type, func_ptr )
+    SERIALIZATION_MAP[ config_py_type ] = ( config_gd_type, serialize_func )
 
 
 def get_deserialization_function( gd_type_id: int ):
