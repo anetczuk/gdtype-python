@@ -76,4 +76,4 @@ class DeserializationStreamV4:
         if message_size < expected_size:
             _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", self.buffer )
             raise ValueError( f"message size mismatch: {message_size} < {expected_size} for {self.buffer}" )
-        return binaryapiv4.deserialize_type( self.buffer )
+        return binaryapiv4.ct.deserialize_type( self.buffer )
