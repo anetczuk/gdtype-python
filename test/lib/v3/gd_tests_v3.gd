@@ -67,7 +67,7 @@ func read_file( file_path: String ):
 
 func test_data( input_data ):
     var curr_dir = ProjectSettings.globalize_path("res://")
-    var handler_path = curr_dir + "./lib/v3/handle_data.sh"
+    var handler_path = curr_dir + "./lib/run_python.sh"
 
     var tmp_in  = curr_dir + "./tmp/data_in_v3.bin"
     var tmp_out = curr_dir + "./tmp/data_out_v3.bin"
@@ -78,7 +78,7 @@ func test_data( input_data ):
     data_out.close()
 
     var output = []
-    var args = PoolStringArray( [ "-if=" + tmp_in, "-of=" + tmp_out ] )
+    var args = PoolStringArray( [ curr_dir + "./lib/v3/handle_data.py", "-if=" + tmp_in, "-of=" + tmp_out ] )
     var exit_code = OS.execute( handler_path, args, true, output, true )
 
     if exit_code != OK:

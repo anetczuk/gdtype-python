@@ -6,7 +6,7 @@ set -eu
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 
-LIB_DIR="$SCRIPT_DIR/../../../src"
+LIB_DIR="$SCRIPT_DIR/../../src"
 
 
 if [ -z ${PYTHONPATH+x} ]; then
@@ -16,4 +16,4 @@ else
 fi
 
 
-python3 $SCRIPT_DIR/handle_data.py $@
+python3 $@
