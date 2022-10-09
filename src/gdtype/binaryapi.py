@@ -21,6 +21,8 @@
 # SOFTWARE.
 #
 
+# pylint: disable=invalid-name
+
 import logging
 from enum import IntEnum, unique
 from dataclasses import dataclass, field
@@ -343,7 +345,6 @@ class Rect2():
     y_coord: float = 0.0
     x_size: float  = 0.0
     y_size: float  = 0.0
-    
 
     def __init__( self, data_array=None ):
         if data_array is None:
@@ -379,7 +380,6 @@ class Rect2i():
     y_coord: int = 0
     x_size: int  = 0
     y_size: int  = 0
-    
 
     def __init__( self, data_array=None ):
         if data_array is None:
@@ -662,7 +662,6 @@ class AABB():
     x_size: float  = 0.0
     y_size: float  = 0.0
     z_size: float  = 0.0
-    
 
     def __init__( self, data_array=None ):
         if data_array is None:
@@ -698,7 +697,6 @@ def serialize_AABB( gd_type_id: int, value: AABB, data: BytesContainer ):
 class Basis():
     ## has 3 rows and 3 columns
     values: list
-    
 
     def __init__( self, data_array=None ):
         if data_array is None:
@@ -996,9 +994,6 @@ class ByteArray():
     def __getitem__( self, index ):
         return self.values[ index ]
 
-    def append( self, value ):
-        self.values.append( value )
-
 
 def deserialize_ByteArray( _: int, data: BytesContainer ):
     data_len = data.size()
@@ -1008,7 +1003,6 @@ def deserialize_ByteArray( _: int, data: BytesContainer ):
     list_size   = data_header
     if list_size < 1:
         return ByteArray()
-
     bytes_data = data.pop( list_size )
     return ByteArray( bytes_data )
 
@@ -1286,7 +1280,6 @@ def serialize_Vector2Array( gd_type_id: int, value: Vector2Array, data: BytesCon
         data.pushFloat32( item[1] )
 
 
-
 ## =========================================================
 
 
@@ -1446,10 +1439,10 @@ class GodotType( IntEnum ):
 ## <serialize_function>   converts Python value into binary array representing Godot type
 ## configuration accepts two formats"
 ##     explicit: ( Godot_Type_Id, Python_Type, <deserialize_function>, <serialize_function> )
-##     implicit: ( Godot_Type_Id, Python_Type ) 
+##     implicit: ( Godot_Type_Id, Python_Type )
 ##                where <deserialize_function> is "deserialize_Python_Type"
 ##                where <serialize_function>   is "serialize_Python_Type"
-CONFIG_LIST = [
+CONFIG_LIST: List[ Tuple ] = [
     ( GodotType.NULL.value,                 type(None),     deserialize_none,         serialize_none ),
     ( GodotType.BOOL.value,                 bool,           deserialize_bool,         serialize_bool ),
     ( GodotType.INT.value,                  int,            deserialize_int,          serialize_int ),
@@ -1500,11 +1493,9 @@ SERIALIZATION_MAP: Dict[ object, Tuple[int, FunctionType] ] = {}
 
 for config in CONFIG_LIST:
     ## deserialization map
-    config_gd_type: int = config[0]
-    config_py_type: object = config[1]
-    
-    deserialize_func: FunctionType = None
-    serialize_func: FunctionType   = None
+    config_gd_type: int  = config[0]
+    config_py_type: type = config[1]
+
     if len( config ) == 4:
         deserialize_func: FunctionType = config[2]
         serialize_func: FunctionType   = config[3]
@@ -1512,9 +1503,9 @@ for config in CONFIG_LIST:
         ## find serialization/deserialization functions by name
         py_type_name = config_py_type.__name__
         mod_vars = vars()
-        deserialize_func = mod_vars[ "deserialize_%s" % py_type_name ]
-        serialize_func   = mod_vars[ "serialize_%s" % py_type_name ]
-    
+        deserialize_func = mod_vars[ f"deserialize_{py_type_name}" ]
+        serialize_func   = mod_vars[ f"serialize_{py_type_name}" ]
+
     if config_gd_type in DESERIALIZATION_MAP:
         raise ValueError( f"invalid CONFIG_LIST: Godot type {config_gd_type} already defined" )
     DESERIALIZATION_MAP[ config_gd_type ] = deserialize_func

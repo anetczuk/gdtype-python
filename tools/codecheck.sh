@@ -55,6 +55,7 @@ echo "flake8 -- no warnings found"
 
 
 echo "running pylint3"
+echo "ignore warning for module (put on top of file): # pylint: disable=<check_id>"
 pylint --rcfile=$SCRIPT_DIR/pylint3.config $src_dir/gdtype $src_dir/testgdtype $src_dir/*.py
 exit_code=$?
 if [ $exit_code -ne 0 ]; then

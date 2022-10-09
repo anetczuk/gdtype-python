@@ -92,7 +92,6 @@ class BytesContainer:
         proper_data = struct.unpack( "<d", raw )
         proper_data = proper_data[0]
         return proper_data
-        return proper_data
 
     def popFloat64Items(self, items_number):
         retList = []
