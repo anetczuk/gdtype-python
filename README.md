@@ -49,6 +49,12 @@ Checking library functionality can be done by executing one of following scripts
 All tests can be run using `./test/run_all_tests.sh`.
 
 
+## Examples of not obvious mechanisms
+
+- running GDScript scripts from command line (`./test/run_tests_v4.sh`)
+- `main`-like structure of GDScript (`./test/lib/v4/gd_tests_v4.gd`)
+
+
 ## References
 
 - [Godot Binary serialization API (latest)](https://docs.godotengine.org/en/latest/tutorials/io/binary_serialization_api.html)
