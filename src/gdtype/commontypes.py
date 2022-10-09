@@ -274,12 +274,12 @@ class Vector2():
         return [ self.x, self.y ]
 
 
-def deserialize_vector2( _: int, data: BytesContainer ) -> Vector2:
+def deserialize_Vector2( _: int, data: BytesContainer ) -> Vector2:
     data = data.popFloat32Items(2)
     return Vector2( data )
 
 
-def serialize_vector2( gd_type_id: int, value: Vector2, data: BytesContainer ):
+def serialize_Vector2( gd_type_id: int, value: Vector2, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
     data.pushFloat32Items( data_array )
@@ -305,12 +305,12 @@ class Vector2i():
         return [ self.x, self.y ]
 
 
-def deserialize_vector2i( _: int, data: BytesContainer ) -> Vector2i:
+def deserialize_Vector2i( _: int, data: BytesContainer ) -> Vector2i:
     data = data.popInt32Items(2)
     return Vector2i( data )
 
 
-def serialize_vector2i( gd_type_id: int, value: Vector2i, data: BytesContainer ):
+def serialize_Vector2i( gd_type_id: int, value: Vector2i, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
     data.pushIntItems( data_array )
@@ -409,12 +409,12 @@ class Vector3():
 
 
 # def deserialize_vector3( data_flags: int, data: BytesContainer ):
-def deserialize_vector3( _: int, data: BytesContainer ) -> Vector3:
+def deserialize_Vector3( _: int, data: BytesContainer ) -> Vector3:
     data = data.popFloat32Items(3)
     return Vector3( data )
 
 
-def serialize_vector3( gd_type_id: int, value: Vector3, data: BytesContainer ):
+def serialize_Vector3( gd_type_id: int, value: Vector3, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
     data.pushFloat32Items( data_array )
@@ -442,12 +442,12 @@ class Vector3i():
         return [ self.x, self.y, self.z ]
 
 
-def deserialize_vector3i( _: int, data: BytesContainer ) -> Vector3i:
+def deserialize_Vector3i( _: int, data: BytesContainer ) -> Vector3i:
     data = data.popInt32Items(3)
     return Vector3i( data )
 
 
-def serialize_vector3i( gd_type_id: int, value: Vector3i, data: BytesContainer ):
+def serialize_Vector3i( gd_type_id: int, value: Vector3i, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
     data.pushIntItems( data_array )
