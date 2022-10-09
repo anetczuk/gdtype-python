@@ -23,10 +23,10 @@
 
 import unittest
 
-from gdtype.deserializationstream import DeserializationStream
+from gdtype.deserializationstreamv4 import DeserializationStreamV4
 
 
-class DeserializationStreamTest(unittest.TestCase):
+class DeserializationStreamV4Test(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
         pass
@@ -37,7 +37,7 @@ class DeserializationStreamTest(unittest.TestCase):
 
     def test_size_equal(self):
         raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00'
-        stream = DeserializationStream( raw_bytes )
+        stream = DeserializationStreamV4( raw_bytes )
         result = stream.receive()
         self.assertEqual( stream.size(), 0 )
         self.assertEqual( result[0], True )
@@ -45,7 +45,7 @@ class DeserializationStreamTest(unittest.TestCase):
 
     def test_size_more(self):
         raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00\x00\x00'
-        stream = DeserializationStream( raw_bytes )
+        stream = DeserializationStreamV4( raw_bytes )
         result = stream.receive()
         self.assertEqual( stream.size(), 2 )
         self.assertEqual( result[0], True )

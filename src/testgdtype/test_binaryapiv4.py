@@ -23,7 +23,7 @@
 
 import unittest
 
-from gdtype.binaryapi import deserialize, serialize, Transform3D
+from gdtype.binaryapiv4 import deserialize, serialize, Transform3D
 
 
 #TODO: add tests for invalid input (check exceptions)

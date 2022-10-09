@@ -23,14 +23,14 @@
 
 import logging
 
-from . import binaryapi
+from . import binaryapiv4
 from .bytescontainer import BytesContainer
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeserializationStream:
+class DeserializationStreamV4:
 
     def __init__(self, data: bytes = None):
         self.buffer = BytesContainer( data )
@@ -53,11 +53,11 @@ class DeserializationStream:
     ## =====================================================
 
     def containsMessage(self):
-        check_size = binaryapi.check_message_size( self.buffer.data )
+        check_size = binaryapiv4.check_message_size( self.buffer.data )
         return check_size >= 0
 
     def receive(self):
-        check_size = binaryapi.check_message_size( self.buffer.data )
+        check_size = binaryapiv4.check_message_size( self.buffer.data )
         if check_size < 0:
             return (False, check_size)
         data = self._deserialize()
@@ -65,7 +65,7 @@ class DeserializationStream:
 
     def receiveList(self):
         ret_list = []
-        while binaryapi.check_message_size( self.buffer.data ) >= 0:
+        while binaryapiv4.check_message_size( self.buffer.data ) >= 0:
             data = self._deserialize()
             ret_list.append( data )
         return ret_list
@@ -76,4 +76,4 @@ class DeserializationStream:
         if message_size < expected_size:
             _LOGGER.error( "invalid packet -- packet size mismatch data size: %s", self.buffer )
             raise ValueError( f"message size mismatch: {message_size} < {expected_size} for {self.buffer}" )
-        return binaryapi.deserialize_type( self.buffer )
+        return binaryapiv4.deserialize_type( self.buffer )
