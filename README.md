@@ -41,7 +41,7 @@ rawData: bytes = None
 # receive bytes (e.g. from network or file)
 gdObject = binaryapi.deserialize( rawData )
 ## change gdObject
-rawData = binaryapi.deserialize( gdObject )
+rawData = binaryapi.serialize( gdObject )
 ## send or store rawData
 ```
 
