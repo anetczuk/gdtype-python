@@ -17,7 +17,7 @@ Both modules profide following functions:
 For more details see those modules.
 
 
-## Use case
+## Use example
 
 Library is useful is case of communicating with GDScript using Python, for example when game expose API through network interface.
 
@@ -25,17 +25,30 @@ Sending variant over network using `GDScript`:
 ```gdscript
 var stream: StreamPeer
 var data
-# ...
+## initialize data and stream
 stream.put_var( data )
+## ...
+var data2 = stream.get_var()
+## handle new data
 ```
 
 
 Deserialization in `Python` can be done as follows:
 ```python
+from gdtype.binaryapiv4 as binaryapi
+
 rawData: bytes = None
-# ...
-gdObject = gdtype.deserialize( rawData )
+# receive bytes (e.g. from network or file)
+gdObject = binaryapi.deserialize( rawData )
+## change gdObject
+rawData = binaryapi.deserialize( gdObject )
+## send or store rawData
 ```
+
+
+## Installation
+
+Installation does not require special preparation. Simply copy `src/gdtype` directory into your project directory tree and import it in script.
 
 
 ## Running tests
