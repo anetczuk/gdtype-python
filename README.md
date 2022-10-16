@@ -62,6 +62,24 @@ Checking library functionality can be done by executing one of following scripts
 All tests can be run using `./test/run_all_tests.sh`.
 
 
+## Known issues
+
+Module internally uses `type()` for finding proper serialization and deserialization functions. It can lead to serialization error `unable to serialize data`.
+Error occurs if all conditions meet:
+- `gdtype` package placed as subpackage,
+- `sys.path` is altered (can happen in case of running scripts from within package tree)
+-  `gdtype` is imported in more than one module in inconsistent manner:
+    - `from mainpackage.gdtype import binaryapiv4 as binaryapi`
+    - `import gdtype.binaryapiv4 as binaryapi`
+- `gdtype` structure is initialized in one module and serialized in the other
+As result `gdtype` will be imported twice with different *namespaces* and incompatible configurations.
+
+To prevent the situation do one of:
+- do not alter `sys.path` (interpreter will not allow to import `gdtype` in inconsistent way)
+- wrap whole serialization/deserialization functionality in one module
+- keep imports consistent
+
+
 ## Examples of not obvious mechanisms
 
 - running GDScript scripts from command line (`./test/run_tests_v4.sh`)
