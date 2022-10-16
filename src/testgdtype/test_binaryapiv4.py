@@ -24,6 +24,7 @@
 import unittest
 
 from gdtype.binaryapiv4 import deserialize, serialize
+from gdtype.commontypes import Vector3
 
 
 #TODO: add tests for invalid input (check exceptions)
@@ -92,6 +93,14 @@ class DeserializeTest(unittest.TestCase):
         data_value = deserialize( raw_bytes )
         self.assertEqual( type(data_value), str )
         self.assertEqual( data_value, "" )
+
+    def test_Vector3(self):
+        raw_bytes = b'\x10\x00\x00\x00\x09\x00\x00\x00\x9a\x99\x31\x41\x9a\x99\xb1\x41\x33\x33\x05\x42'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), Vector3 )
+        self.assertAlmostEqual( data_value.x, 11.1, 5 )
+        self.assertAlmostEqual( data_value.y, 22.2, 5 )
+        self.assertAlmostEqual( data_value.z, 33.3, 5 )
 
     def test_list_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x1c\x00\x00\x00\x00\x00\x00\x00'
@@ -193,6 +202,21 @@ class SerializeTest(unittest.TestCase):
     def test_string_empty(self):
         raw_bytes = b'\x08\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00'
         data_value = ""
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Vector3(self):
+        # pylint: disable=C0301
+        raw_bytes = b'\x10\x00\x00\x00\x09\x00\x00\x00\x9a\x99\x31\x41\x9a\x99\xb1\x41\x33\x33\x05\x42'
+        data_value = Vector3( [11.1, 22.2, 33.3] )
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Vector3_alias(self):
+        import gdtype.commontypes as types
+        # pylint: disable=C0301
+        raw_bytes = b'\x10\x00\x00\x00\x09\x00\x00\x00\x9a\x99\x31\x41\x9a\x99\xb1\x41\x33\x33\x05\x42'
+        data_value = types.Vector3( [11.1, 22.2, 33.3] )
         data = serialize( data_value )
         self.assertEqual( data, raw_bytes )
 

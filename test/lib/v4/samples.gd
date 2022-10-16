@@ -46,6 +46,9 @@ func execute():
     data = 123.333
     print( "float ", data, "\n", Utils.serialized_representation( data ) )
 
+    data = Vector3( 11.1, 22.2, 33.3 )
+    print( "Vector3 ", data, "\n", Utils.serialized_representation( data ) )
+
     data = []
     print( "list ", data, "\n", Utils.serialized_representation( data ) )
 
