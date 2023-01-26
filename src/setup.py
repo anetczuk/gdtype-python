@@ -27,6 +27,6 @@ setup( name='gdtype',
        version='2.0',
        description="Serialize and deserialize Godot's GDScript types in Python",
        url="https://github.com/anetczuk/gdtype-python",
-       packages = packages_list,
-       install_requires = install_reqs
-     )
+       packages=packages_list,
+       install_requires=install_reqs
+       )

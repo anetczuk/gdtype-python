@@ -15,6 +15,6 @@ cd $SCRIPT_DIR/../src
 
 echo "running mypy"
 echo "ignore line warning using: # type: ignore"
-mypy --cache-dir $CACHE_DIR --no-strict-optional --ignore-missing-imports -p gdtype -p testgdtype
+mypy --cache-dir $CACHE_DIR --no-strict-optional --ignore-missing-imports .
 
 echo "mypy finished"

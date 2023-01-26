@@ -54,9 +54,17 @@ fi
 echo "flake8 -- no warnings found"
 
 
+modules_paths=()
+for dir in $src_dir/*/; do
+    if [ -f "$dir/__init__.py" ]; then
+        modules_paths+=( "$dir" )
+    fi
+done
+
 echo "running pylint3"
-echo "ignore warning for module (put on top of file): # pylint: disable=<check_id>"
-pylint --rcfile=$SCRIPT_DIR/pylint3.config $src_dir/gdtype $src_dir/testgdtype $src_dir/*.py
+echo "to ignore warning for module put following line on top of file: # pylint: disable=<check_id>"
+echo "to ignore warning for one line put following comment in end of line: # pylint: disable=<check_id>"
+pylint --rcfile=$SCRIPT_DIR/pylint3.config ${modules_paths[@]} $src_dir/*.py
 exit_code=$?
 if [ $exit_code -ne 0 ]; then
     exit $exit_code
