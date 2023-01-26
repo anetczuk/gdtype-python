@@ -22,6 +22,7 @@
 #
 
 # pylint: disable=invalid-name
+# pylint: disable=too-many-lines
 
 import logging
 from dataclasses import dataclass, field
