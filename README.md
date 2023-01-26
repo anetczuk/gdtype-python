@@ -50,6 +50,10 @@ rawData = binaryapi.serialize( gdObject )
 
 Installation does not require special preparation. Simply copy `src/gdtype` directory into your project directory tree and import it in script.
 
+In addition there are two install scripts:
+1. `/src/install-package.sh` which installs **copy** of package into Python directory
+2. `/src/install-devel.sh` which installs package in *editable* mode (symlinks) into Python directory
+
 
 ## Running tests
 
