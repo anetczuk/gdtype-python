@@ -20,13 +20,17 @@ def read_list( file_path ):
 
 packages_list = find_packages( include=['gdtype', 'gdtype.*'] )
 
-install_reqs = read_list( os.path.join( SCRIPT_DIR, "requirements.txt" ) )
+requirements_path = os.path.join( SCRIPT_DIR, "requirements.txt" )
+install_reqs = read_list( requirements_path )
 
+## every time setup info changes then version number should be increased
 
 setup( name='gdtype',
-       version='2.0',
+       version='2.0.1',
        description="Serialize and deserialize Godot's GDScript types in Python",
        url="https://github.com/anetczuk/gdtype-python",
+       author='anetczuk',
+       license='MIT',
        packages=packages_list,
        install_requires=install_reqs
        )
