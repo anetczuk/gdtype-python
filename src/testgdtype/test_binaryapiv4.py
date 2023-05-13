@@ -23,6 +23,8 @@
 
 import unittest
 
+import numpy
+
 from gdtype.binaryapiv4 import deserialize, serialize
 from gdtype.commontypes import Vector3, deserialize_custom, deserialize_type, serialize_custom, serialize_type,\
     Int32Array, Int64Array, Vector2Array, Vector3Array
@@ -167,6 +169,69 @@ class DeserializeTest(unittest.TestCase):
 #                     }
 #         self.assertEqual( data_value, data_dict )
 
+    def test_int_custom(self):
+        raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00'
+        data_value = deserialize_custom( raw_bytes, deserialize_type )
+        self.assertEqual( type(data_value), int )
+        self.assertEqual( data_value, 123 )
+
+    def test_Int32Array(self):
+        raw_bytes = b'\x14\x00\x00\x00\x1e\x00\x00\x00\x03\x00\x00\x00\x1f\x00\x00\x00\xe0\xff\xff\xff\x21\x00\x00\x00'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), Int32Array )
+        self.assertEqual( data_value.values, [31, -32, 33] )
+
+    def test_Int64Array(self):
+        raw_bytes = b'\x20\x00\x00\x00\x1f\x00\x00\x00\x03\x00\x00\x00\x1f\x00\x00\x00\x00\x00\x00\x00\xe0\xff\xff\xff\xff\xff\xff\xff\x21\x00\x00\x00\x00\x00\x00\x00'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), Int64Array )
+        self.assertEqual( data_value.values, [31, -32, 33] )
+
+    def test_Int64Array_numpy(self):
+        raw_bytes = b'\x20\x00\x00\x00\x1f\x00\x00\x00\x03\x00\x00\x00\x1f\x00\x00\x00\x00\x00\x00\x00\xe0\xff\xff\xff\xff\xff\xff\xff\x21\x00\x00\x00\x00\x00\x00\x00'
+        data_value = deserialize( raw_bytes )
+        data_value = data_value.toNumpy()
+        data_list  = data_value.tolist()
+        self.assertEqual( type(data_value), numpy.ndarray )
+        self.assertEqual( int, data_value.dtype )
+        self.assertEqual( data_list, [31, -32, 33] )
+
+    def test_Vector2Array(self):
+        Vector2Array
+        raw_bytes = b' \x00\x00\x00#\x00\x00\x00\x03\x00\x00\x00\xcd\xcc\xcc=\x9a\x99\x99?33S@\x9a\x99\x19@\x00\x00\xf0\xc0\x9a\x99\x19\xc1'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), Vector2Array )
+        self.assertAlmostEqual( data_value.items[0][0], 0.1, 4 ) 
+        self.assertAlmostEqual( data_value.items[2][1], -9.6, 4 ) 
+
+    def test_Vector2Array_numpy(self):
+        raw_bytes = b' \x00\x00\x00#\x00\x00\x00\x03\x00\x00\x00\xcd\xcc\xcc=\x9a\x99\x99?33S@\x9a\x99\x19@\x00\x00\xf0\xc0\x9a\x99\x19\xc1'
+        data_value = deserialize( raw_bytes )
+        data_value = data_value.toNumpy()
+        data_list  = data_value.tolist()
+        self.assertEqual( type(data_value), numpy.ndarray )
+        self.assertEqual( float, data_value.dtype )
+        self.assertEqual( len(data_value), 3 )
+        self.assertAlmostEqual( data_list[0][0], 0.1, 4 ) 
+        self.assertAlmostEqual( data_list[2][1], -9.6, 4 ) 
+
+    def test_Vector3Array(self):
+        raw_bytes = b'\x20\x00\x00\x00\x24\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x3f\x00\x00\x00\x00\x00\x00\x80\x3f\x9a\x99\x19\x3f\xcd\xcc\xcc\x3d\xcd\xcc\x8c\xbf'
+        data_value = deserialize( raw_bytes )
+        self.assertEqual( type(data_value), Vector3Array )
+        self.assertAlmostEqual( data_value.items[0][0], 0.5, 4 ) 
+        self.assertAlmostEqual( data_value.items[1][2], -1.1, 4 ) 
+
+    def test_Vector3Array_numpy(self):
+        raw_bytes = b'\x20\x00\x00\x00\x24\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x3f\x00\x00\x00\x00\x00\x00\x80\x3f\x9a\x99\x19\x3f\xcd\xcc\xcc\x3d\xcd\xcc\x8c\xbf'
+        data_value = deserialize( raw_bytes )
+        data_value = data_value.toNumpy()
+        data_list  = data_value.tolist()
+        self.assertEqual( type(data_value), numpy.ndarray )
+        self.assertEqual( float, data_value.dtype )
+        self.assertEqual( len(data_value), 2 )
+        self.assertAlmostEqual( data_list[0][0], 0.5, 4 ) 
+        self.assertAlmostEqual( data_list[1][2], -1.1, 4 ) 
 
 
 ##
@@ -252,5 +317,56 @@ class SerializeTest(unittest.TestCase):
         # pylint: disable=C0301
         raw_bytes = b'\x1c\x00\x00\x00\x1b\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x05\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00bbc\x00'
         data_value = {5: "bbc"}
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_int_custom(self):
+        raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00'
+        data_value = 123
+        data = serialize_custom( data_value, serialize_type )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Int32Array(self):
+        raw_bytes = b'\x14\x00\x00\x00\x1e\x00\x00\x00\x03\x00\x00\x00\x1f\x00\x00\x00\xe0\xff\xff\xff\x21\x00\x00\x00'
+        data_value = Int32Array([31, -32, 33])
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Int64Array(self):
+        raw_bytes = b'\x20\x00\x00\x00\x1f\x00\x00\x00\x03\x00\x00\x00\x1f\x00\x00\x00\x00\x00\x00\x00\xe0\xff\xff\xff\xff\xff\xff\xff\x21\x00\x00\x00\x00\x00\x00\x00'
+        data_value = Int64Array([31, -32, 33])
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Int64Array_numpy(self):
+        raw_bytes = b'\x20\x00\x00\x00\x1f\x00\x00\x00\x03\x00\x00\x00\x1f\x00\x00\x00\x00\x00\x00\x00\xe0\xff\xff\xff\xff\xff\xff\xff\x21\x00\x00\x00\x00\x00\x00\x00'
+        data_value = numpy.array([31, -32, 33])
+        data_value = Int64Array.fromNumpy( data_value )
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Vector2Array(self):
+        raw_bytes = b' \x00\x00\x00#\x00\x00\x00\x03\x00\x00\x00\xcd\xcc\xcc=\x9a\x99\x99?33S@\x9a\x99\x19@\x00\x00\xf0\xc0\x9a\x99\x19\xc1'
+        data_value = Vector2Array([[0.1, 1.2], [3.3, 2.4], [-7.5, -9.6]])
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Vector2Array_numpy(self):
+        raw_bytes = b' \x00\x00\x00#\x00\x00\x00\x03\x00\x00\x00\xcd\xcc\xcc=\x9a\x99\x99?33S@\x9a\x99\x19@\x00\x00\xf0\xc0\x9a\x99\x19\xc1'
+        data_value = numpy.array([[0.1, 1.2], [3.3, 2.4], [-7.5, -9.6]])
+        data_value = Vector2Array.fromNumpy( data_value )
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Vector3Array(self):
+        raw_bytes = b'\x20\x00\x00\x00\x24\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x3f\x00\x00\x00\x00\x00\x00\x80\x3f\x9a\x99\x19\x3f\xcd\xcc\xcc\x3d\xcd\xcc\x8c\xbf'
+        data_value = Vector3Array([[0.5, 0.0, 1.0], [0.6, 0.1, -1.1]])
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_Vector3Array_numpy(self):
+        raw_bytes = b'\x20\x00\x00\x00\x24\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x3f\x00\x00\x00\x00\x00\x00\x80\x3f\x9a\x99\x19\x3f\xcd\xcc\xcc\x3d\xcd\xcc\x8c\xbf'
+        data_value = numpy.array([[0.5, 0.0, 1.0], [0.6, 0.1, -1.1]])
+        data_value = Vector3Array.fromNumpy( data_value )
         data = serialize( data_value )
         self.assertEqual( data, raw_bytes )
