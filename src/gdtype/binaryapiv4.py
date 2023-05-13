@@ -150,6 +150,10 @@ CONFIG_LIST = [
 ## ======================================================================
 
 
+##
+## DESERIALIZATION_MAP: Dict[ Godot_Type_Id, <deserialize_function> ]
+## SERIALIZATION_MAP:   Dict[ Python_Type, (Godot_Type_Id, <serialize_function>) ]
+##
 DESERIALIZATION_MAP, SERIALIZATION_MAP = ct.prepare_config_dicts( CONFIG_LIST, ct )
 
 

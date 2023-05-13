@@ -130,10 +130,20 @@ def serialize_type( value, data: BytesContainer ):
 ## =========================================================
 
 
+##
+## Returns function of ( int, BytesContainer ) -> Any
+## where Any depends on 'gd_type_id'.
+## Example of returned function 'deserialize_float'.
+##
 def get_deserialization_function( gd_type_id: int ):
     raise NotImplementedError( "stub function: implement and import proper function" )
 
 
+##
+## Returns pair: ( int, ( int, Any, BytesContainer ) -> void )
+## consists on pair containing Godot type ID and serialization function.
+## Example of returned function 'serialize_float'.
+##
 def get_serialization_config( py_type: type ):
     raise NotImplementedError( "stub function: implement and import proper function" )
 
@@ -213,7 +223,7 @@ def serialize_int( gd_type_id: int, value, data: BytesContainer ):
 ## =========================================================
 
 
-def deserialize_float( data_flags: int, data: BytesContainer ):
+def deserialize_float( data_flags: int, data: BytesContainer ) -> float:
     data_len = data.size()
     encoded_64 = (data_flags & 1) == 1
     if encoded_64:
@@ -228,7 +238,7 @@ def deserialize_float( data_flags: int, data: BytesContainer ):
     return proper_data
 
 
-def serialize_float( gd_type_id: int, value, data: BytesContainer ):
+def serialize_float( gd_type_id: int, value: float, data: BytesContainer ):
     data.pushFlagsType( 1, gd_type_id )
     data.pushFloat64( value )
 
@@ -237,14 +247,14 @@ def serialize_float( gd_type_id: int, value, data: BytesContainer ):
 
 
 # def deserialize_string( data_flags: int, data: BytesContainer ):
-def deserialize_string( _: int, data: BytesContainer ):
+def deserialize_string( _: int, data: BytesContainer ) -> str:
     data_len = data.size()
     if data_len < 4:
         raise ValueError( f"invalid packet -- too short: {data}" )
     return data.popString()
 
 
-def serialize_string( gd_type_id: int, value, data: BytesContainer ):
+def serialize_string( gd_type_id: int, value: str, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     str_len = len( value )
     data.pushInt32( str_len )
@@ -314,7 +324,7 @@ def deserialize_Vector2i( _: int, data: BytesContainer ) -> Vector2i:
 def serialize_Vector2i( gd_type_id: int, value: Vector2i, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
-    data.pushIntItems( data_array )
+    data.pushInt32Items( data_array )
 
 
 ## =========================================================
@@ -384,7 +394,7 @@ def deserialize_Rect2i( _: int, data: BytesContainer ) -> Rect2i:
 def serialize_Rect2i( gd_type_id: int, value: Rect2i, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
-    data.pushIntItems( data_array )
+    data.pushInt32Items( data_array )
 
 
 ## =========================================================
@@ -451,7 +461,7 @@ def deserialize_Vector3i( _: int, data: BytesContainer ) -> Vector3i:
 def serialize_Vector3i( gd_type_id: int, value: Vector3i, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
-    data.pushIntItems( data_array )
+    data.pushInt32Items( data_array )
 
 
 ## =========================================================
@@ -559,7 +569,7 @@ def deserialize_Vector4i( _: int, data: BytesContainer ) -> Vector4i:
 def serialize_Vector4i( gd_type_id: int, value: Vector3i, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
     data_array = value.getDataArray()
-    data.pushIntItems( data_array )
+    data.pushInt32Items( data_array )
 
 
 ## =========================================================
@@ -1035,7 +1045,7 @@ def serialize_Int32Array( gd_type_id: int, value: Int32Array, data: BytesContain
     list_size = len( value )
     data_header = list_size
     data.pushInt32( data_header )
-    data.pushIntItems( value.values )
+    data.pushInt32Items( value.values )
 
 
 ## =========================================================

@@ -32,6 +32,7 @@ from gdtype.commontypes import Vector3
 #TODO: add tests inside GDScript (call python code from gdsript)
 
 
+##
 class DeserializeTest(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
@@ -166,6 +167,8 @@ class DeserializeTest(unittest.TestCase):
 #         self.assertEqual( data_value, data_dict )
 
 
+
+##
 class SerializeTest(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
@@ -213,10 +216,9 @@ class SerializeTest(unittest.TestCase):
         self.assertEqual( data, raw_bytes )
 
     def test_Vector3_alias(self):
-        import gdtype.commontypes as types
         # pylint: disable=C0301
         raw_bytes = b'\x10\x00\x00\x00\x09\x00\x00\x00\x9a\x99\x31\x41\x9a\x99\xb1\x41\x33\x33\x05\x42'
-        data_value = types.Vector3( [11.1, 22.2, 33.3] )
+        data_value = Vector3( [11.1, 22.2, 33.3] )
         data = serialize( data_value )
         self.assertEqual( data, raw_bytes )
 

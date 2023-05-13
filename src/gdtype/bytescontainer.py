@@ -52,59 +52,59 @@ class BytesContainer:
         return ret_data
 
     ## pop int from front
-    def popInt32(self):
+    def popInt32(self) -> int:
         raw = self.pop(4)
         return int.from_bytes( raw, byteorder='little' )
 
-    def popInt32Items(self, items_number):
+    def popInt32Items(self, items_number) -> List[ int ]:
         retList = []
         for _ in range(0, items_number):
             value = self.popInt32()
             retList.append( value )
         return retList
 
-    def popInt64(self):
+    def popInt64(self) -> int:
         raw = self.pop(8)
         return int.from_bytes( raw, byteorder='little' )
 
-    def popInt64Items(self, items_number):
+    def popInt64Items(self, items_number) -> List[ int ]:
         retList = []
         for _ in range(0, items_number):
             value = self.popInt64()
             retList.append( value )
         return retList
 
-    def popFloat32(self):
+    def popFloat32(self) -> float:
         raw = self.pop(4)
         proper_data = struct.unpack( "<f", raw )
         proper_data = proper_data[0]
         return proper_data
 
-    def popFloat32Items(self, items_number):
+    def popFloat32Items(self, items_number) -> List[ float ]:
         retList = []
         for _ in range(0, items_number):
             value = self.popFloat32()
             retList.append( value )
         return retList
 
-    def popFloat64(self):
+    def popFloat64(self) -> float:
         raw = self.pop(8)
         proper_data = struct.unpack( "<d", raw )
         proper_data = proper_data[0]
         return proper_data
 
-    def popFloat64Items(self, items_number):
+    def popFloat64Items(self, items_number) -> List[ float ]:
         retList = []
         for _ in range(0, items_number):
             value = self.popFloat64()
             retList.append( value )
         return retList
 
-    def popStringRaw(self, string_len: int):
+    def popStringRaw(self, string_len: int) -> str:
         data_string = self.pop( string_len )
         return data_string.decode("utf-8")
 
-    def popString(self, string_len: int = -1 ):
+    def popString(self, string_len: int = -1 ) -> str:
         if string_len < 0:
             string_len = self.popInt32()
         if string_len < 1:
@@ -118,7 +118,7 @@ class BytesContainer:
         return proper_data
 
     ## pop from front
-    def popFlagsType(self):
+    def popFlagsType(self) -> int:
         raw = self.popInt32()
         data_type  = raw & 0xFF
         data_flags = (raw >> 16) & 0xFF
@@ -142,7 +142,7 @@ class BytesContainer:
         raw = value.to_bytes( 4,  byteorder='little' )
         self.push( raw )
 
-    def pushIntItems(self, value_array: List[int] ):
+    def pushInt32Items(self, value_array: List[int] ):
         for item in value_array:
             self.pushInt32( item )
 
