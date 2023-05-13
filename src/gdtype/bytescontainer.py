@@ -54,7 +54,14 @@ class BytesContainer:
     ## pop int from front
     def popInt32(self) -> int:
         raw = self.pop(4)
-        return int.from_bytes( raw, byteorder='little' )
+        proper_data = int.from_bytes( raw, byteorder='little' )
+        if proper_data & 0x80000000:
+            ## got negative number
+            neg_val = proper_data & 0x7FFFFFFF
+            return -0x80000000 + neg_val
+            # return proper_data & 0x7FFFFFFF | ~0x7FFFFFFF
+        ## positive number
+        return proper_data
 
     def popInt32Items(self, items_number) -> List[ int ]:
         retList = []
@@ -65,7 +72,14 @@ class BytesContainer:
 
     def popInt64(self) -> int:
         raw = self.pop(8)
-        return int.from_bytes( raw, byteorder='little' )
+        proper_data = int.from_bytes( raw, byteorder='little' )
+        if proper_data & 0x8000000000000000:
+            ## got negative number
+            neg_val = proper_data & 0x7FFFFFFFFFFFFFFF
+            return -0x8000000000000000 + neg_val
+            # return proper_data & 0x7FFFFFFF | ~0x7FFFFFFF
+        ## positive number
+        return proper_data
 
     def popInt64Items(self, items_number) -> List[ int ]:
         retList = []
@@ -139,7 +153,11 @@ class BytesContainer:
 
     ## push back value
     def pushInt32( self, value: int ):
-        raw = value.to_bytes( 4,  byteorder='little' )
+        if value & 0x80000000:
+            ## got negative number
+            pos_val = value & 0x7FFFFFFF
+            value = 0x80000000 + pos_val
+        raw = value.to_bytes( 4, byteorder='little' )
         self.push( raw )
 
     def pushInt32Items(self, value_array: List[int] ):
@@ -148,7 +166,11 @@ class BytesContainer:
 
     ## push back value
     def pushInt64( self, value: int ):
-        raw = value.to_bytes( 8,  byteorder='little' )
+        if value & 0x8000000000000000:
+            ## got negative number
+            pos_val = value & 0x7FFFFFFFFFFFFFFF
+            value = 0x8000000000000000 + pos_val
+        raw = value.to_bytes( 8, byteorder='little' )
         self.push( raw )
 
     def pushInt64Items(self, value_array: List[int] ):

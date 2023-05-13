@@ -62,6 +62,23 @@ func execute():
     data[5] = "bbc"
     print( "dict ", data, "\n", Utils.serialized_representation( data ) )
 
+    data = PackedInt32Array()
+    data.append( 31 )
+    data.append( -32 )
+    data.append( 33 )
+    print( "PackedInt32Array ", data, "\n", Utils.serialized_representation( data ) )
+
+    data = PackedInt64Array()
+    data.append( 31 )
+    data.append( -32 )
+    data.append( 33 )
+    print( "PackedInt64Array ", data, "\n", Utils.serialized_representation( data ) )
+
+    data = PackedVector3Array()
+    data.append( Vector3( 0.5, 0.0, 1.0 ) )
+    data.append( Vector3( 0.6, 0.1, -1.1 ) )
+    print( "PackedVector3Array ", data, "\n", Utils.serialized_representation( data ) )
+
 #       data = PackedColorArray()
 #       data.append( Color( 0.1, 0.2, 0.3, 0.4 ) )
 #       data.append( Color( 0.4, 0.5, 0.6, 0.7 ) )

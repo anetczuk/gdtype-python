@@ -24,7 +24,8 @@
 import unittest
 
 from gdtype.binaryapiv4 import deserialize, serialize
-from gdtype.commontypes import Vector3
+from gdtype.commontypes import Vector3, deserialize_custom, deserialize_type, serialize_custom, serialize_type,\
+    Int32Array, Int64Array, Vector2Array, Vector3Array
 
 
 #TODO: add tests for invalid input (check exceptions)
@@ -187,6 +188,12 @@ class SerializeTest(unittest.TestCase):
     def test_int(self):
         raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00{\x00\x00\x00'
         data_value = 123
+        data = serialize( data_value )
+        self.assertEqual( data, raw_bytes )
+
+    def test_int_negative(self):
+        raw_bytes = b'\x08\x00\x00\x00\x02\x00\x00\x00\xf7\xff\xff\xff'
+        data_value = -9
         data = serialize( data_value )
         self.assertEqual( data, raw_bytes )
 

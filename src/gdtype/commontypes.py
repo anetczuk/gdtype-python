@@ -197,27 +197,12 @@ def deserialize_int( _: int, data: BytesContainer ):
     data_len = data.size()
     if data_len < 4:
         raise ValueError( f"invalid packet -- too short: {data}" )
-    proper_data = data.popInt32()
-    if proper_data & 0x80000000:
-        ## got negative number
-        neg_val = proper_data & 0x7FFFFFFF
-        return -0x80000000 + neg_val
-#         return proper_data & 0x7FFFFFFF | ~0x7FFFFFFF
-
-    ## positive number
-    return proper_data
+    return data.popInt32()
 
 
 def serialize_int( gd_type_id: int, value, data: BytesContainer ):
     data.pushFlagsType( 0, gd_type_id )
-    if value & 0x80000000:
-        ## got negative number
-        pos_val = value & 0x7FFFFFFF
-        out = 0x80000000 + pos_val
-        data.pushInt32( out )
-    else:
-        ## positive number
-        data.pushInt32( value )
+    data.pushInt32( value )
 
 
 ## =========================================================
